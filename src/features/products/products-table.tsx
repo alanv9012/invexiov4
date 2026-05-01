@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { InventoryAdjustmentDrawer } from "@/features/products/inventory-adjustment-drawer";
 import type { ProductItem, ProductSyncStatus } from "@/features/products/types";
 
 type ProductsTableProps = {
@@ -33,6 +34,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
             <th className="px-4 py-3">Stock</th>
             <th className="px-4 py-3">Sync status</th>
             <th className="px-4 py-3">Last synced</th>
+            <th className="px-4 py-3 text-right">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
@@ -61,6 +63,13 @@ export function ProductsTable({ products }: ProductsTableProps) {
                 </span>
               </td>
               <td className="px-4 py-3 text-slate-600">{formatSyncDate(product.lastSyncedAt)}</td>
+              <td className="px-4 py-3 text-right">
+                <InventoryAdjustmentDrawer
+                  productId={product.id}
+                  productName={product.name}
+                  currentStock={product.stockQuantity}
+                />
+              </td>
             </tr>
           ))}
         </tbody>
