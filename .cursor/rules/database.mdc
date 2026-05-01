@@ -1,0 +1,45 @@
+# Database Rules
+
+Use Supabase Postgres.
+
+Important tables:
+- profiles
+- products
+- inventory_movements
+- orders
+- order_items
+- woo_connections
+- sync_logs
+
+Every stock change must create an inventory movement.
+
+Never update product stock silently.
+
+Inventory movement should include:
+- product_id
+- previous_quantity
+- change_quantity
+- new_quantity
+- reason
+- source
+- user_id
+- created_at
+
+Products should store WooCommerce IDs when synced:
+- woo_product_id
+- woo_variation_id if needed
+- sku
+- name
+- price
+- stock_quantity
+- manage_stock
+- status
+- image_url
+- last_synced_at
+
+Sync logs should store:
+- type
+- status
+- message
+- payload
+- created_at

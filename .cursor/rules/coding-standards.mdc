@@ -1,0 +1,37 @@
+# Coding Standards
+
+Use:
+- TypeScript everywhere.
+- Clear interfaces and types.
+- Server Components by default.
+- Client Components only when interactivity is required.
+- Zod for validation.
+- Supabase server client for database operations.
+- Environment variables for secrets.
+
+Avoid:
+- Large files.
+- Duplicated logic.
+- Hardcoded API keys.
+- Direct WooCommerce calls from client components.
+- Mixing UI, business logic, and API logic in one file.
+
+Prefer this structure:
+
+src/
+  app/
+  components/
+  features/
+  lib/
+  server/
+  types/
+
+Each feature should have its own folder inside `src/features`.
+
+Use clear naming:
+- `products`
+- `orders`
+- `inventory`
+- `sync`
+- `auth`
+- `dashboard`

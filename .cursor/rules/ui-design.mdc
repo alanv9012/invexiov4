@@ -1,0 +1,39 @@
+# UI Design Rules
+
+The UI should be modern, clean, and professional.
+
+Visual style:
+- Minimalist dashboard.
+- Light and dark mode support.
+- Rounded cards.
+- Good spacing.
+- Clear typography.
+- Mobile-friendly layout.
+- Avoid clutter.
+
+Use Tailwind CSS.
+
+Preferred layout:
+- Sidebar navigation on desktop.
+- Bottom navigation or collapsible menu on mobile.
+- Top bar with page title and user actions.
+- Cards for metrics.
+- Tables for product and order data.
+- Modals or drawers for editing inventory.
+
+The app should feel like a serious SaaS dashboard, not a generic admin template.
+
+Use consistent colors:
+- Neutral background.
+- Accent color for primary actions.
+- Red only for destructive actions or errors.
+- Green only for success or stock-positive states.
+- Yellow/orange for warnings or low stock.
+
+Every page should have:
+- Clear title.
+- Short description.
+- Main action button when relevant.
+- Empty states.
+- Loading states.
+- Error states.

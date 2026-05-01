@@ -1,0 +1,27 @@
+# Invexio Project Overview
+
+Invexio is an inventory management web app connected to WooCommerce.
+
+The app should help users:
+- View products.
+- Search and filter products.
+- Update inventory.
+- Add manual orders.
+- Sync products and orders with WooCommerce.
+- Track inventory movements.
+- See sync errors and retry them.
+
+Architecture:
+- Next.js App Router.
+- TypeScript.
+- Tailwind CSS.
+- Supabase Postgres.
+- Supabase Auth.
+- WooCommerce REST API.
+- Vercel deployment.
+
+WooCommerce should be treated as the external commerce system.
+Supabase should be the app database and local source for fast reads, audit logs, roles, and sync history.
+
+Do not make the frontend call WooCommerce directly.
+WooCommerce API calls must go through server-side functions only.

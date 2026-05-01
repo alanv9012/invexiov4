@@ -1,0 +1,23 @@
+# Security Rules
+
+Never expose WooCommerce API keys to the browser.
+
+Secrets must only be used server-side.
+
+Use environment variables:
+- NEXT_PUBLIC_SUPABASE_URL
+- NEXT_PUBLIC_SUPABASE_ANON_KEY
+- SUPABASE_SERVICE_ROLE_KEY
+- WOOCOMMERCE_CONSUMER_KEY
+- WOOCOMMERCE_CONSUMER_SECRET
+- WOOCOMMERCE_STORE_URL
+
+Use Supabase Row Level Security.
+
+Users should only access data they are allowed to access.
+
+Do not trust client input.
+Validate all server actions and API routes with Zod.
+
+Do not log secrets.
+Do not return raw server errors to the frontend.

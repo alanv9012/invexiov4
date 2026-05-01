@@ -1,0 +1,28 @@
+# Cursor Behavior
+
+Work in small steps.
+
+Before making changes:
+- Briefly explain what files will be touched.
+- Avoid changing unrelated files.
+- Do not refactor large areas unless requested.
+
+After making changes:
+- Explain what changed.
+- Mention any files created or modified.
+- Mention any required environment variables.
+- Mention any manual setup steps.
+
+When unsure:
+- Make a reasonable decision.
+- Keep the implementation simple.
+- Do not add unnecessary libraries.
+
+Prioritize:
+1. Correct architecture.
+2. Maintainability.
+3. Security.
+4. Good UX.
+5. Performance.
+
+Do not build everything at once.
