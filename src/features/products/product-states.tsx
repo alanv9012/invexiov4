@@ -22,12 +22,16 @@ export function ProductsEmptyState() {
   );
 }
 
-export function ProductsErrorState() {
+type ProductsErrorStateProps = {
+  message?: string;
+};
+
+export function ProductsErrorState({ message }: ProductsErrorStateProps) {
   return (
     <div className="rounded-lg border border-rose-200 bg-rose-50 p-6">
       <h3 className="text-lg font-semibold text-rose-800">Could not load products</h3>
       <p className="mt-2 text-sm text-rose-700">
-        Something went wrong while loading product data. Please try again.
+        {message ?? "Something went wrong while loading product data. Please try again."}
       </p>
     </div>
   );

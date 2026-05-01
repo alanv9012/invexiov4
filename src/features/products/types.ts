@@ -1,4 +1,4 @@
-export type ProductSyncStatus = "synced" | "pending" | "failed";
+export type ProductSyncStatus = "synced" | "pending";
 
 export type ProductItem = {
   id: string;
@@ -13,3 +13,9 @@ export type ProductItem = {
 
 export type ProductStatusFilter = "all" | ProductSyncStatus;
 export type ProductStockFilter = "all" | "in_stock" | "low_stock" | "out_of_stock";
+
+export type ProductsSearchParams = {
+  q?: string | string[];
+  status?: string | string[];
+  stock?: string | string[];
+};

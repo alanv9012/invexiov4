@@ -7,8 +7,7 @@ type ProductsTableProps = {
 
 const statusStyles: Record<ProductSyncStatus, string> = {
   synced: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  pending: "bg-amber-50 text-amber-700 border-amber-200",
-  failed: "bg-rose-50 text-rose-700 border-rose-200"
+  pending: "bg-amber-50 text-amber-700 border-amber-200"
 };
 
 function formatPrice(value: number): string {
