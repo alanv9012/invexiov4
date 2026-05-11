@@ -40,6 +40,14 @@ function Feedback({ state }: { state: AdjustStockFormState }) {
     );
   }
 
+  if (state.status === "warning") {
+    return (
+      <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+        {state.message}
+      </p>
+    );
+  }
+
   return (
     <p className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
       {state.message}
@@ -57,7 +65,7 @@ export function InventoryAdjustmentDrawer({
   const router = useRouter();
 
   useEffect(() => {
-    if (state.status === "success") {
+    if (state.status === "success" || state.status === "warning") {
       router.refresh();
     }
   }, [router, state.status]);

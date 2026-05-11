@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { getSupabaseAdminClient } from "@/server/supabase/admin";
+import { createWooCommerceClient } from "@/server/woocommerce/client";
 
 const adjustStockSchema = z.object({
   productId: z.string().uuid("Invalid product selected."),
@@ -15,7 +17,7 @@ const adjustStockSchema = z.object({
 });
 
 export type AdjustStockFormState = {
-  status: "idle" | "success" | "error";
+  status: "idle" | "success" | "warning" | "error";
   message: string | null;
 };
 
@@ -48,11 +50,12 @@ export async function adjustStockAction(
   }
 
   const supabase = await getSupabaseServerClient();
+  const admin = getSupabaseAdminClient();
   const {
     data: { user }
   } = await supabase.auth.getUser();
 
-  const { error } = await supabase.rpc("record_inventory_movement", {
+  const { data: movement, error } = await supabase.rpc("record_inventory_movement", {
     p_product_id: parsed.data.productId,
     p_change_quantity: parsed.data.adjustmentAmount,
     p_reason: buildReason(parsed.data.reason, parsed.data.notes),
@@ -69,10 +72,81 @@ export async function adjustStockAction(
     };
   }
 
-  revalidatePath("/products");
+  const { data: product } = await admin
+    .from("products")
+    .select("woo_product_id")
+    .eq("id", parsed.data.productId)
+    .single();
 
-  return {
-    status: "success",
-    message: "Inventory updated successfully."
-  };
+  const movementResult = movement as { new_quantity: number } | null;
+  const newQuantity = movementResult?.new_quantity ?? null;
+  const wooProductId = product?.woo_product_id ?? null;
+
+  if (!wooProductId || newQuantity === null) {
+    await admin.from("sync_logs").insert({
+      type: "inventory",
+      status: "success",
+      message: "Inventory adjusted locally. No WooCommerce product link found.",
+      payload: {
+        productId: parsed.data.productId,
+        changeQuantity: parsed.data.adjustmentAmount
+      },
+      started_at: new Date().toISOString(),
+      finished_at: new Date().toISOString()
+    });
+
+    revalidatePath("/products");
+
+    return {
+      status: "success",
+      message: "Inventory updated successfully."
+    };
+  }
+
+  try {
+    const woo = createWooCommerceClient();
+    await woo.updateProductStock(wooProductId, newQuantity);
+
+    await admin.from("sync_logs").insert({
+      type: "inventory",
+      status: "success",
+      message: "Inventory updated locally and synced to WooCommerce.",
+      payload: {
+        productId: parsed.data.productId,
+        wooProductId,
+        newQuantity,
+        changeQuantity: parsed.data.adjustmentAmount
+      },
+      started_at: new Date().toISOString(),
+      finished_at: new Date().toISOString()
+    });
+
+    revalidatePath("/products");
+
+    return {
+      status: "success",
+      message: "Inventory updated and synced to WooCommerce."
+    };
+  } catch {
+    await admin.from("sync_logs").insert({
+      type: "inventory",
+      status: "failed",
+      message: "Inventory updated locally, but WooCommerce sync failed.",
+      payload: {
+        productId: parsed.data.productId,
+        wooProductId,
+        newQuantity,
+        changeQuantity: parsed.data.adjustmentAmount
+      },
+      started_at: new Date().toISOString(),
+      finished_at: new Date().toISOString()
+    });
+
+    revalidatePath("/products");
+
+    return {
+      status: "warning",
+      message: "Local stock was updated, but WooCommerce sync failed. Please retry from Sync."
+    };
+  }
 }
