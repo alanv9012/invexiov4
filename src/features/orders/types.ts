@@ -4,8 +4,8 @@ export type OrderSyncStatus = "synced" | "pending" | "failed";
 
 export type OrderRow = {
   id: string;
-  orderNumber: string;
-  customerName: string;
+  orderNumber: string | null;
+  customerName: string | null;
   status: string;
   total: number;
   currency: string;
@@ -19,5 +19,4 @@ export type OrdersSearchParams = {
   status?: string | string[];
   source?: string | string[];
   sync?: string | string[];
-  error?: string | string[];
 };

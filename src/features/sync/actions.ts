@@ -1,6 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import {
+  completeSyncLogFailure,
+  completeSyncLogSuccess,
+  startSyncLog
+} from "@/features/sync/sync-log-helpers";
 import { getSupabaseAdminClient } from "@/server/supabase/admin";
 import { createWooCommerceClient, type WooOrder } from "@/server/woocommerce/client";
 
@@ -53,21 +58,11 @@ export async function syncProductsFromWooCommerceAction(
   _formData: FormData
 ): Promise<SyncProductsState> {
   const supabase = getSupabaseAdminClient();
-  const syncStart = new Date().toISOString();
-  const { data: logRow } = await supabase
-    .from("sync_logs")
-    .insert({
-      type: "products",
-      status: "running",
-      message: "Started WooCommerce product sync.",
-      payload: {},
-      started_at: syncStart,
-      finished_at: null
-    })
-    .select("id")
-    .single();
-
-  const syncLogId = logRow?.id ?? null;
+  const { syncLogId, syncStart } = await startSyncLog(
+    supabase,
+    "products",
+    "Started WooCommerce product sync."
+  );
 
   try {
     const woo = createWooCommerceClient();
@@ -143,21 +138,45 @@ export async function syncProductsFromWooCommerceAction(
       const now = new Date().toISOString();
 
       if (!existing) {
-        const { error: insertError } = await supabase.from("products").insert({
-          woo_product_id: wooProduct.id,
-          sku: wooProduct.sku,
-          name: wooProduct.name,
-          price: Number(wooProduct.price || 0),
-          stock_quantity: safeStock,
-          manage_stock: wooProduct.manage_stock ?? true,
-          status: normalizeStatus(wooProduct.status),
-          image_url: wooProduct.images?.[0]?.src ?? null,
-          last_synced_at: now
-        });
+        const { data: insertedProduct, error: insertError } = await supabase
+          .from("products")
+          .insert({
+            woo_product_id: wooProduct.id,
+            sku: wooProduct.sku,
+            name: wooProduct.name,
+            price: Number(wooProduct.price || 0),
+            stock_quantity: 0,
+            manage_stock: wooProduct.manage_stock ?? true,
+            status: normalizeStatus(wooProduct.status),
+            image_url: wooProduct.images?.[0]?.src ?? null,
+            last_synced_at: now
+          })
+          .select("id")
+          .single();
 
-        if (insertError) {
+        if (insertError || !insertedProduct) {
           skippedCount += 1;
           continue;
+        }
+
+        if (safeStock > 0) {
+          const { error: movementError } = await supabase.rpc("record_inventory_movement", {
+            p_product_id: insertedProduct.id,
+            p_change_quantity: safeStock,
+            p_reason: "Initial WooCommerce stock sync",
+            p_source: "sync",
+            p_user_id: null,
+            p_reference_type: "woo_product_sync",
+            p_reference_id: null
+          });
+
+          if (movementError) {
+            await supabase.from("products").delete().eq("id", insertedProduct.id);
+            skippedCount += 1;
+            continue;
+          }
+
+          adjustedStockCount += 1;
         }
 
         insertedCount += 1;
@@ -205,24 +224,14 @@ export async function syncProductsFromWooCommerceAction(
 
     const successMessage = `Synced ${insertedCount + updatedCount} products (${insertedCount} new, ${updatedCount} updated, ${adjustedStockCount} stock adjustments, ${skippedCount} skipped).`;
 
-    if (syncLogId) {
-      await supabase
-        .from("sync_logs")
-        .update({
-          status: "success",
-          message: successMessage,
-          payload: {
-            fetched: fetchedProducts.length,
-            processed: insertedCount + updatedCount,
-            inserted: insertedCount,
-            updated: updatedCount,
-            stockAdjusted: adjustedStockCount,
-            skipped: skippedCount
-          },
-          finished_at: new Date().toISOString()
-        })
-        .eq("id", syncLogId);
-    }
+    await completeSyncLogSuccess(supabase, syncLogId, successMessage, {
+      fetched: fetchedProducts.length,
+      processed: insertedCount + updatedCount,
+      inserted: insertedCount,
+      updated: updatedCount,
+      stockAdjusted: adjustedStockCount,
+      skipped: skippedCount
+    });
 
     revalidatePath("/products");
     revalidatePath("/sync");
@@ -233,27 +242,7 @@ export async function syncProductsFromWooCommerceAction(
     };
   } catch {
     const errorMessage = "Product sync failed. Please check WooCommerce credentials and try again.";
-
-    if (syncLogId) {
-      await supabase
-        .from("sync_logs")
-        .update({
-          status: "failed",
-          message: errorMessage,
-          payload: {},
-          finished_at: new Date().toISOString()
-        })
-        .eq("id", syncLogId);
-    } else {
-      await supabase.from("sync_logs").insert({
-        type: "products",
-        status: "failed",
-        message: errorMessage,
-        payload: {},
-        started_at: syncStart,
-        finished_at: new Date().toISOString()
-      });
-    }
+    await completeSyncLogFailure(supabase, syncLogId, syncStart, "products", errorMessage);
 
     return {
       status: "error",
@@ -278,21 +267,11 @@ export async function syncOrdersFromWooCommerceAction(
   _formData: FormData
 ): Promise<SyncOrdersState> {
   const supabase = getSupabaseAdminClient();
-  const syncStart = new Date().toISOString();
-  const { data: logRow } = await supabase
-    .from("sync_logs")
-    .insert({
-      type: "orders",
-      status: "running",
-      message: "Started WooCommerce order sync.",
-      payload: {},
-      started_at: syncStart,
-      finished_at: null
-    })
-    .select("id")
-    .single();
-
-  const syncLogId = logRow?.id ?? null;
+  const { syncLogId, syncStart } = await startSyncLog(
+    supabase,
+    "orders",
+    "Started WooCommerce order sync."
+  );
 
   try {
     const woo = createWooCommerceClient();
@@ -430,23 +409,13 @@ export async function syncOrdersFromWooCommerceAction(
 
     const successMessage = `Synced ${insertedCount + updatedCount} orders (${insertedCount} new, ${updatedCount} updated, ${itemsSynced} line items, ${skippedCount} skipped).`;
 
-    if (syncLogId) {
-      await supabase
-        .from("sync_logs")
-        .update({
-          status: "success",
-          message: successMessage,
-          payload: {
-            fetched: fetchedOrders.length,
-            inserted: insertedCount,
-            updated: updatedCount,
-            itemsSynced,
-            skipped: skippedCount
-          },
-          finished_at: new Date().toISOString()
-        })
-        .eq("id", syncLogId);
-    }
+    await completeSyncLogSuccess(supabase, syncLogId, successMessage, {
+      fetched: fetchedOrders.length,
+      inserted: insertedCount,
+      updated: updatedCount,
+      itemsSynced,
+      skipped: skippedCount
+    });
 
     revalidatePath("/orders");
     revalidatePath("/sync");
@@ -457,27 +426,7 @@ export async function syncOrdersFromWooCommerceAction(
     };
   } catch {
     const errorMessage = "Order sync failed. Please check WooCommerce credentials and try again.";
-
-    if (syncLogId) {
-      await supabase
-        .from("sync_logs")
-        .update({
-          status: "failed",
-          message: errorMessage,
-          payload: {},
-          finished_at: new Date().toISOString()
-        })
-        .eq("id", syncLogId);
-    } else {
-      await supabase.from("sync_logs").insert({
-        type: "orders",
-        status: "failed",
-        message: errorMessage,
-        payload: {},
-        started_at: syncStart,
-        finished_at: new Date().toISOString()
-      });
-    }
+    await completeSyncLogFailure(supabase, syncLogId, syncStart, "orders", errorMessage);
 
     return {
       status: "error",

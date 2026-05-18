@@ -23,7 +23,7 @@ export function OrdersFilters({ query, orderStatus, source, sync }: OrdersFilter
       <div className="mb-4">
         <h2 className="text-xl font-semibold text-slate-900">Orders</h2>
         <p className="mt-1 text-sm text-slate-600">
-          Review orders with mock data. WooCommerce order sync is not enabled yet.
+          Review and filter orders synced from WooCommerce and created manually in Invexio.
         </p>
       </div>
 

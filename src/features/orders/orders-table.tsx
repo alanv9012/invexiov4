@@ -1,3 +1,4 @@
+import { formatDateTime, formatMoney } from "@/lib/format";
 import type { OrderRow, OrderSource, OrderSyncStatus } from "@/features/orders/types";
 
 type OrdersTableProps = {
@@ -15,16 +16,6 @@ const sourceLabels: Record<OrderSource, string> = {
   woocommerce: "WooCommerce",
   system: "System"
 };
-
-function formatMoney(amount: number, currency: string): string {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount);
-}
-
-function formatDate(iso: string): string {
-  return new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(
-    new Date(iso)
-  );
-}
 
 export function OrdersTable({ orders }: OrdersTableProps) {
   return (
@@ -47,11 +38,11 @@ export function OrdersTable({ orders }: OrdersTableProps) {
               <td className="px-4 py-3 font-mono text-xs font-medium text-slate-900">
                 {order.orderNumber}
               </td>
-              <td className="px-4 py-3 text-slate-900">{order.customerName}</td>
+              <td className="px-4 py-3 text-slate-900">{order.customerName ?? "—"}</td>
               <td className="px-4 py-3 capitalize">{order.status.replace("-", " ")}</td>
               <td className="px-4 py-3">{formatMoney(order.total, order.currency)}</td>
               <td className="px-4 py-3">{sourceLabels[order.source]}</td>
-              <td className="px-4 py-3 text-slate-600">{formatDate(order.createdAt)}</td>
+              <td className="px-4 py-3 text-slate-600">{formatDateTime(order.createdAt)}</td>
               <td className="px-4 py-3">
                 <span
                   className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold capitalize ${syncStyles[order.syncStatus]}`}

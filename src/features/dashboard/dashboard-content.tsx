@@ -1,4 +1,5 @@
 import type { DashboardData } from "@/features/dashboard/types";
+import { formatDateTime, formatMoney } from "@/lib/format";
 
 type DashboardContentProps = {
   data: DashboardData;
@@ -35,16 +36,6 @@ function MetricCard({
       <p className={`mt-2 text-3xl font-semibold tracking-tight ${valueClasses[tone]}`}>{value}</p>
       {hint ? <p className="mt-1 text-xs text-slate-500">{hint}</p> : null}
     </article>
-  );
-}
-
-function formatMoney(amount: number): string {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
-}
-
-function formatDate(iso: string): string {
-  return new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(
-    new Date(iso)
   );
 }
 
@@ -114,7 +105,7 @@ export function DashboardContent({ data }: DashboardContentProps) {
                   <div className="text-right">
                     <p className="font-medium text-slate-900">{formatMoney(order.totalAmount)}</p>
                     <p className="capitalize text-slate-500">{order.status.replace("-", " ")}</p>
-                    <p className="text-xs text-slate-400">{formatDate(order.orderedAt)}</p>
+                    <p className="text-xs text-slate-400">{formatDateTime(order.orderedAt)}</p>
                   </div>
                 </li>
               ))}
@@ -145,7 +136,7 @@ export function DashboardContent({ data }: DashboardContentProps) {
                     </p>
                   </div>
                   <p className="mt-1 text-xs text-slate-400">
-                    {movement.source} · {formatDate(movement.createdAt)}
+                    {movement.source} · {formatDateTime(movement.createdAt)}
                   </p>
                 </li>
               ))}

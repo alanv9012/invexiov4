@@ -1,6 +1,7 @@
 import { ProfileForm } from "@/features/settings/profile-form";
 import type { SettingsPageData } from "@/features/settings/types";
 import { WooTestButton } from "@/features/settings/woo-test-button";
+import { formatDateTime } from "@/lib/format";
 
 type SettingsContentProps = {
   data: SettingsPageData;
@@ -20,13 +21,6 @@ function ConfigBadge({ configured, label }: { configured: boolean; label: string
         {configured ? "Configured" : "Missing"}
       </span>
     </div>
-  );
-}
-
-function formatDate(iso: string | null): string {
-  if (!iso) return "Never";
-  return new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(
-    new Date(iso)
   );
 }
 
@@ -69,7 +63,9 @@ export function SettingsContent({ data }: SettingsContentProps) {
             <div>
               <dt className="text-slate-500">Last successful sync</dt>
               <dd className="text-slate-900">
-                {formatDate(data.wooConnection.lastSuccessfulSyncAt)}
+                {data.wooConnection.lastSuccessfulSyncAt
+                  ? formatDateTime(data.wooConnection.lastSuccessfulSyncAt)
+                  : "Never"}
               </dd>
             </div>
             <div>

@@ -6,7 +6,14 @@ import { getPublicSupabaseEnv } from "@/lib/supabase/env";
 const publicRoutes = new Set(["/login", "/signup"]);
 
 export async function updateSession(request: NextRequest): Promise<NextResponse> {
-  const { NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY } = getPublicSupabaseEnv();
+  let env: ReturnType<typeof getPublicSupabaseEnv>;
+  try {
+    env = getPublicSupabaseEnv();
+  } catch {
+    return NextResponse.next({ request });
+  }
+
+  const { NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY } = env;
 
   let response = NextResponse.next({ request });
 

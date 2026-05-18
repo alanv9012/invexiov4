@@ -1,6 +1,7 @@
 import "server-only";
 
 import { z } from "zod";
+import { firstSearchParam } from "@/lib/search-params";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import type { ProductItem, ProductStatusFilter, ProductStockFilter, ProductsSearchParams } from "@/features/products/types";
 
@@ -15,13 +16,10 @@ export function parseProductsSearchParams(input: ProductsSearchParams): {
   status: ProductStatusFilter;
   stock: ProductStockFilter;
 } {
-  const getFirstValue = (value: string | string[] | undefined): string | undefined =>
-    Array.isArray(value) ? value[0] : value;
-
   const parsed = productsSearchSchema.safeParse({
-    q: getFirstValue(input.q),
-    status: getFirstValue(input.status),
-    stock: getFirstValue(input.stock)
+    q: firstSearchParam(input.q),
+    status: firstSearchParam(input.status),
+    stock: firstSearchParam(input.stock)
   });
 
   if (!parsed.success) {

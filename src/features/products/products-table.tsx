@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { InventoryAdjustmentDrawer } from "@/features/products/inventory-adjustment-drawer";
 import type { ProductItem, ProductSyncStatus } from "@/features/products/types";
+import { formatDateTime, formatMoney } from "@/lib/format";
 
 type ProductsTableProps = {
   products: ProductItem[];
@@ -10,17 +11,6 @@ const statusStyles: Record<ProductSyncStatus, string> = {
   synced: "bg-emerald-50 text-emerald-700 border-emerald-200",
   pending: "bg-amber-50 text-amber-700 border-amber-200"
 };
-
-function formatPrice(value: number): string {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
-}
-
-function formatSyncDate(value: string | null): string {
-  if (!value) return "Never";
-  return new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(
-    new Date(value)
-  );
-}
 
 export function ProductsTable({ products }: ProductsTableProps) {
   return (
@@ -53,7 +43,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
                 </div>
               </td>
               <td className="px-4 py-3 font-mono text-xs text-slate-600">{product.sku}</td>
-              <td className="px-4 py-3">{formatPrice(product.price)}</td>
+              <td className="px-4 py-3">{formatMoney(product.price)}</td>
               <td className="px-4 py-3">{product.stockQuantity}</td>
               <td className="px-4 py-3">
                 <span
@@ -62,7 +52,9 @@ export function ProductsTable({ products }: ProductsTableProps) {
                   {product.syncStatus}
                 </span>
               </td>
-              <td className="px-4 py-3 text-slate-600">{formatSyncDate(product.lastSyncedAt)}</td>
+              <td className="px-4 py-3 text-slate-600">
+                {product.lastSyncedAt ? formatDateTime(product.lastSyncedAt) : "Never"}
+              </td>
               <td className="px-4 py-3 text-right">
                 <InventoryAdjustmentDrawer
                   productId={product.id}

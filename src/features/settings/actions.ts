@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
-import { getWooEnvStatus } from "@/features/settings/env";
+import { getWooEnvStatus } from "@/server/woocommerce/env";
 import type { UpdateProfileState, WooTestConnectionState } from "@/features/settings/types";
 import { createWooCommerceClient } from "@/server/woocommerce/client";
 

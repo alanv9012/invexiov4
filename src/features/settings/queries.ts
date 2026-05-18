@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getWooEnvStatus } from "@/features/settings/env";
+import { getWooEnvStatus } from "@/server/woocommerce/env";
 import type { SettingsPageData } from "@/features/settings/types";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 

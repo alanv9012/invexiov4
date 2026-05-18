@@ -1,4 +1,4 @@
-import type { WooEnvStatus } from "@/features/settings/env";
+import type { WooEnvStatus } from "@/server/woocommerce/env";
 
 export type SettingsProfile = {
   id: string;
