@@ -10,12 +10,30 @@ type WooProduct = {
   status: string;
 };
 
-type WooOrder = {
+export type WooOrderLineItem = {
   id: number;
+  product_id: number;
+  name: string;
+  sku: string;
+  quantity: number;
+  price: number;
+  total: string;
+};
+
+export type WooOrder = {
+  id: number;
+  number: string;
   status: string;
   currency: string;
   total: string;
   date_created: string;
+  customer_note?: string;
+  billing?: {
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+  };
+  line_items?: WooOrderLineItem[];
 };
 
 type GetProductsOptions = {
