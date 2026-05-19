@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import type { SyncOrdersState, SyncProductsState } from "@/features/sync/sync-action-state";
 import {
   completeSyncLogFailure,
   completeSyncLogSuccess,
@@ -8,26 +9,10 @@ import {
 } from "@/features/sync/sync-log-helpers";
 import { getSupabaseAdminClient } from "@/server/supabase/admin";
 import { createWooCommerceClient, type WooOrder } from "@/server/woocommerce/client";
+import { getWooEnvStatus } from "@/server/woocommerce/env";
 
-export type SyncProductsState = {
-  status: "idle" | "success" | "error";
-  message: string | null;
-};
-
-export const initialSyncProductsState: SyncProductsState = {
-  status: "idle",
-  message: null
-};
-
-export type SyncOrdersState = {
-  status: "idle" | "success" | "error";
-  message: string | null;
-};
-
-export const initialSyncOrdersState: SyncOrdersState = {
-  status: "idle",
-  message: null
-};
+const WOO_NOT_CONFIGURED_MESSAGE =
+  "WooCommerce is not configured. Add the required WooCommerce environment variables before syncing.";
 
 type WooProductRecord = {
   id: number;
@@ -57,6 +42,13 @@ export async function syncProductsFromWooCommerceAction(
   _previous: SyncProductsState,
   _formData: FormData
 ): Promise<SyncProductsState> {
+  if (!getWooEnvStatus().allConfigured) {
+    return {
+      status: "error",
+      message: WOO_NOT_CONFIGURED_MESSAGE
+    };
+  }
+
   const supabase = getSupabaseAdminClient();
   const { syncLogId, syncStart } = await startSyncLog(
     supabase,
@@ -266,6 +258,13 @@ export async function syncOrdersFromWooCommerceAction(
   _previous: SyncOrdersState,
   _formData: FormData
 ): Promise<SyncOrdersState> {
+  if (!getWooEnvStatus().allConfigured) {
+    return {
+      status: "error",
+      message: WOO_NOT_CONFIGURED_MESSAGE
+    };
+  }
+
   const supabase = getSupabaseAdminClient();
   const { syncLogId, syncStart } = await startSyncLog(
     supabase,

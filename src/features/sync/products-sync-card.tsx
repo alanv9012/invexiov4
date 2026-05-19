@@ -2,18 +2,16 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import {
-  initialSyncProductsState,
-  syncProductsFromWooCommerceAction
-} from "@/features/sync/actions";
+import { syncProductsFromWooCommerceAction } from "@/features/sync/actions";
+import { initialSyncProductsState } from "@/features/sync/sync-action-state";
 
-function SyncButton() {
+function SyncButton({ disabled }: { disabled: boolean }) {
   const { pending } = useFormStatus();
 
   return (
     <button
       type="submit"
-      disabled={pending}
+      disabled={disabled || pending}
       className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
     >
       {pending ? "Syncing..." : "Sync products from WooCommerce"}
@@ -21,7 +19,11 @@ function SyncButton() {
   );
 }
 
-export function ProductsSyncCard() {
+type ProductsSyncCardProps = {
+  wooConfigured: boolean;
+};
+
+export function ProductsSyncCard({ wooConfigured }: ProductsSyncCardProps) {
   const [state, formAction] = useActionState(
     syncProductsFromWooCommerceAction,
     initialSyncProductsState
@@ -34,8 +36,12 @@ export function ProductsSyncCard() {
         Pull products from WooCommerce and upsert them into Supabase.
       </p>
 
-      <form action={formAction} className="mt-4">
-        <SyncButton />
+      <form
+        action={wooConfigured ? formAction : undefined}
+        className="mt-4"
+        onSubmit={wooConfigured ? undefined : (event) => event.preventDefault()}
+      >
+        <SyncButton disabled={!wooConfigured} />
       </form>
 
       {state.status === "success" && state.message ? (
