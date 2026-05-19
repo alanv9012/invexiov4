@@ -3,7 +3,7 @@
 Apply in order:
 
 1. `20260501133000_initial_invexio_schema.sql`
-2. `20260511143000_add_customer_phone_to_orders.sql`
+2. `20260511143000_add_customer_phone_to_orders.sql` — required for manual orders (`customer_phone`); safe to rerun
 3. `20260518160000_rls_starter_policies.sql` — **required** after initial schema (RLS is enabled without policies until this runs)
 
 ## Local setup

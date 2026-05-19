@@ -89,6 +89,7 @@ create table if not exists public.orders (
   total_amount numeric(12, 2) not null default 0 check (total_amount >= 0),
   customer_name text,
   customer_email text,
+  customer_phone text,
   source text not null default 'manual' check (source in ('manual', 'woocommerce', 'system')),
   notes text,
   created_by uuid references public.profiles (id) on delete set null,

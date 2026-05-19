@@ -3,11 +3,11 @@
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
+import { createManualOrderAction } from "@/features/orders/actions";
 import {
-  createManualOrderAction,
   initialCreateManualOrderState,
   type CreateManualOrderState
-} from "@/features/orders/actions";
+} from "@/features/orders/create-manual-order-state";
 import type { OrderFormProduct } from "@/features/orders/queries";
 
 type LineRow = {
