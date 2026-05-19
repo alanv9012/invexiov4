@@ -164,32 +164,38 @@ create index if not exists order_items_product_id_idx on public.order_items (pro
 create index if not exists sync_logs_type_status_created_idx on public.sync_logs (type, status, created_at desc);
 create index if not exists sync_logs_connection_idx on public.sync_logs (woo_connection_id);
 
--- updated_at triggers
+-- updated_at triggers (idempotent for local reset/rerun workflows)
+drop trigger if exists set_profiles_updated_at on public.profiles;
 create trigger set_profiles_updated_at
 before update on public.profiles
 for each row
 execute function public.set_updated_at();
 
+drop trigger if exists set_products_updated_at on public.products;
 create trigger set_products_updated_at
 before update on public.products
 for each row
 execute function public.set_updated_at();
 
+drop trigger if exists set_orders_updated_at on public.orders;
 create trigger set_orders_updated_at
 before update on public.orders
 for each row
 execute function public.set_updated_at();
 
+drop trigger if exists set_order_items_updated_at on public.order_items;
 create trigger set_order_items_updated_at
 before update on public.order_items
 for each row
 execute function public.set_updated_at();
 
+drop trigger if exists set_woo_connections_updated_at on public.woo_connections;
 create trigger set_woo_connections_updated_at
 before update on public.woo_connections
 for each row
 execute function public.set_updated_at();
 
+drop trigger if exists prevent_products_stock_update on public.products;
 create trigger prevent_products_stock_update
 before update of stock_quantity on public.products
 for each row
@@ -267,7 +273,17 @@ begin
 end;
 $$;
 
--- Row level security is enabled now; policies can be added when auth is implemented.
+alter function public.record_inventory_movement(
+  uuid,
+  integer,
+  text,
+  text,
+  uuid,
+  text,
+  uuid
+) set search_path = public;
+
+-- Row level security is enabled; starter policies are added in a later migration.
 alter table public.profiles enable row level security;
 alter table public.products enable row level security;
 alter table public.inventory_movements enable row level security;
