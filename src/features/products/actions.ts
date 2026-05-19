@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import type { AdjustStockFormState } from "@/features/products/adjust-stock-state";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseAdminClient } from "@/server/supabase/admin";
 import { createWooCommerceClient } from "@/server/woocommerce/client";
@@ -15,16 +16,6 @@ const adjustStockSchema = z.object({
   reason: z.string().trim().min(2, "Reason is required."),
   notes: z.string().trim().max(300, "Notes must be 300 characters or less.").optional()
 });
-
-export type AdjustStockFormState = {
-  status: "idle" | "success" | "warning" | "error";
-  message: string | null;
-};
-
-export const initialAdjustStockState: AdjustStockFormState = {
-  status: "idle",
-  message: null
-};
 
 function buildReason(reason: string, notes?: string): string {
   if (!notes) return reason;

@@ -3,11 +3,11 @@
 import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
+import { adjustStockAction } from "@/features/products/actions";
 import {
-  adjustStockAction,
   initialAdjustStockState,
   type AdjustStockFormState
-} from "@/features/products/actions";
+} from "@/features/products/adjust-stock-state";
 
 type InventoryAdjustmentDrawerProps = {
   productId: string;
