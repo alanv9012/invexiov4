@@ -1,13 +1,24 @@
 import { DashboardLayout } from "@/components/dashboard-layout";
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function SettingsLoadingPage() {
   return (
     <DashboardLayout>
-      <div className="space-y-4">
-        <div className="h-8 w-32 animate-pulse rounded bg-slate-200" />
-        <div className="h-36 animate-pulse rounded-xl border border-slate-200 bg-white" />
-        <div className="h-48 animate-pulse rounded-xl border border-slate-200 bg-white" />
-        <div className="h-40 animate-pulse rounded-xl border border-slate-200 bg-white" />
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-32" />
+        <Card padding="md" className="space-y-3">
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-20 w-full" />
+        </Card>
+        <Card padding="md" className="space-y-3">
+          <Skeleton className="h-6 w-56" />
+          <Skeleton className="h-32 w-full" />
+        </Card>
+        <Card padding="md" className="space-y-3">
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-24 w-full" />
+        </Card>
       </div>
     </DashboardLayout>
   );

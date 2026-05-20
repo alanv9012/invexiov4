@@ -2,24 +2,22 @@ import { ProfileForm } from "@/features/settings/profile-form";
 import type { SettingsPageData } from "@/features/settings/types";
 import { WooTestButton } from "@/features/settings/woo-test-button";
 import { formatDateTime } from "@/lib/format";
-
+import { Alert } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardTitle } from "@/components/ui/card";
+import { Select } from "@/components/ui/input";
+import { SectionHeader } from "@/components/ui/section-header";
 type SettingsContentProps = {
   data: SettingsPageData;
 };
 
 function ConfigBadge({ configured, label }: { configured: boolean; label: string }) {
   return (
-    <div className="flex items-center justify-between rounded-md border border-slate-200 px-3 py-2 text-sm">
-      <span className="text-slate-700">{label}</span>
-      <span
-        className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-          configured
-            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-            : "bg-rose-50 text-rose-700 border border-rose-200"
-        }`}
-      >
+    <div className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-body-sm">
+      <span className="text-foreground">{label}</span>
+      <Badge variant={configured ? "success" : "danger"} size="sm">
         {configured ? "Configured" : "Missing"}
-      </span>
+      </Badge>
     </div>
   );
 }
@@ -27,67 +25,62 @@ function ConfigBadge({ configured, label }: { configured: boolean; label: string
 export function SettingsContent({ data }: SettingsContentProps) {
   if (data.errorMessage) {
     return (
-      <div className="rounded-lg border border-rose-200 bg-rose-50 p-6">
-        <h2 className="text-lg font-semibold text-rose-800">Settings unavailable</h2>
-        <p className="mt-2 text-sm text-rose-700">{data.errorMessage}</p>
-      </div>
+      <Alert variant="danger" title="Settings unavailable">
+        {data.errorMessage}
+      </Alert>
     );
   }
 
   return (
     <div className="space-y-6">
-      <header>
-        <h2 className="text-2xl font-semibold text-slate-900">Settings</h2>
-        <p className="mt-1 text-sm text-slate-600">
-          Manage store connection, integrations, profile, and app preferences.
-        </p>
-      </header>
+      <SectionHeader
+        size="page"
+        title="Settings"
+        description="Manage store connection, integrations, profile, and app preferences."
+      />
 
-      <section className="rounded-xl border border-slate-200 bg-white p-5">
-        <h3 className="text-lg font-semibold text-slate-900">Store connection</h3>
-        <p className="mt-1 text-sm text-slate-600">
+      <Card padding="md">
+        <CardTitle>Store connection</CardTitle>
+        <p className="mt-1 text-body-sm text-muted-foreground">
           Connection metadata stored in Supabase. API credentials remain in server environment
           variables only.
         </p>
 
         {data.wooConnection ? (
-          <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
+          <dl className="mt-4 grid gap-2 text-body-sm sm:grid-cols-2">
             <div>
-              <dt className="text-slate-500">Connection name</dt>
-              <dd className="font-medium text-slate-900">{data.wooConnection.name}</dd>
+              <dt className="text-muted-foreground">Connection name</dt>
+              <dd className="font-medium text-foreground">{data.wooConnection.name}</dd>
             </div>
             <div>
-              <dt className="text-slate-500">Store URL</dt>
-              <dd className="font-medium text-slate-900">{data.wooConnection.storeUrl}</dd>
+              <dt className="text-muted-foreground">Store URL</dt>
+              <dd className="font-medium text-foreground">{data.wooConnection.storeUrl}</dd>
             </div>
             <div>
-              <dt className="text-slate-500">Last successful sync</dt>
-              <dd className="text-slate-900">
+              <dt className="text-muted-foreground">Last successful sync</dt>
+              <dd className="text-foreground">
                 {data.wooConnection.lastSuccessfulSyncAt
                   ? formatDateTime(data.wooConnection.lastSuccessfulSyncAt)
                   : "Never"}
               </dd>
             </div>
             <div>
-              <dt className="text-slate-500">Last error</dt>
-              <dd className="text-slate-900">
-                {data.wooConnection.lastErrorMessage ?? "None recorded"}
-              </dd>
+              <dt className="text-muted-foreground">Last error</dt>
+              <dd className="text-foreground">{data.wooConnection.lastErrorMessage ?? "None recorded"}</dd>
             </div>
           </dl>
         ) : (
-          <p className="mt-4 text-sm text-slate-500">
+          <p className="mt-4 text-body-sm text-muted-foreground">
             No active WooCommerce connection record found. Sync products from the Sync page to
             create connection metadata.
           </p>
         )}
-      </section>
+      </Card>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-5">
-        <h3 className="text-lg font-semibold text-slate-900">WooCommerce API status</h3>
-        <p className="mt-1 text-sm text-slate-600">
-          Environment configuration is checked server-side. Secret values are never shown in the
-          UI.
+      <Card padding="md">
+        <CardTitle>WooCommerce API status</CardTitle>
+        <p className="mt-1 text-body-sm text-muted-foreground">
+          Environment configuration is checked server-side. Secret values are never shown in the UI.
         </p>
 
         <div className="mt-4 space-y-2">
@@ -103,54 +96,52 @@ export function SettingsContent({ data }: SettingsContentProps) {
         </div>
 
         {data.wooEnv.storeUrlDisplay ? (
-          <p className="mt-3 text-sm text-slate-600">
-            Store URL: <span className="font-medium text-slate-900">{data.wooEnv.storeUrlDisplay}</span>
+          <p className="mt-3 text-body-sm text-muted-foreground">
+            Store URL: <span className="font-medium text-foreground">{data.wooEnv.storeUrlDisplay}</span>
           </p>
         ) : null}
 
         <div className="mt-4">
           <WooTestButton canTest={data.wooEnv.allConfigured} />
         </div>
-      </section>
+      </Card>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-5">
-        <h3 className="text-lg font-semibold text-slate-900">User profile</h3>
-        <p className="mt-1 text-sm text-slate-600">Update your display name used across Invexio.</p>
-        <div className="mt-4">
-          {data.profile ? <ProfileForm profile={data.profile} /> : null}
-        </div>
-      </section>
+      <Card padding="md">
+        <CardTitle>User profile</CardTitle>
+        <p className="mt-1 text-body-sm text-muted-foreground">Update your display name used across Invexio.</p>
+        <div className="mt-4">{data.profile ? <ProfileForm profile={data.profile} /> : null}</div>
+      </Card>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-5">
-        <h3 className="text-lg font-semibold text-slate-900">App preferences</h3>
-        <p className="mt-1 text-sm text-slate-600">
+      <Card padding="md">
+        <CardTitle>App preferences</CardTitle>
+        <p className="mt-1 text-body-sm text-muted-foreground">
           Personal UI preferences. Persistence will be expanded in a future release.
         </p>
 
         <div className="mt-4 space-y-4">
-          <label className="flex items-center justify-between gap-4 rounded-md border border-slate-200 px-3 py-3 text-sm">
-            <span className="text-slate-700">Show low-stock highlights on dashboard</span>
-            <input type="checkbox" defaultChecked disabled className="h-4 w-4 rounded border-slate-300" />
+          <label className="flex items-center justify-between gap-4 rounded-md border border-border px-3 py-3 text-body-sm">
+            <span className="text-foreground">Show low-stock highlights on dashboard</span>
+            <input type="checkbox" defaultChecked disabled className="h-4 w-4 rounded border-border-strong" />
           </label>
-          <label className="flex items-center justify-between gap-4 rounded-md border border-slate-200 px-3 py-3 text-sm">
-            <span className="text-slate-700">Email alerts for failed syncs</span>
-            <input type="checkbox" disabled className="h-4 w-4 rounded border-slate-300" />
+          <label className="flex items-center justify-between gap-4 rounded-md border border-border px-3 py-3 text-body-sm">
+            <span className="text-foreground">Email alerts for failed syncs</span>
+            <input type="checkbox" disabled className="h-4 w-4 rounded border-border-strong" />
           </label>
-          <div className="rounded-md border border-slate-200 px-3 py-3 text-sm">
-            <label htmlFor="defaultCurrency" className="mb-1 block text-slate-700">
+          <div className="rounded-md border border-border px-3 py-3 text-body-sm">
+            <label htmlFor="defaultCurrency" className="mb-1 block text-foreground">
               Default currency display
             </label>
-            <select
+            <Select
               id="defaultCurrency"
               disabled
               defaultValue="USD"
-              className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-slate-600"
+              className="bg-surface-muted text-muted-foreground"
             >
               <option value="USD">USD</option>
-            </select>
+            </Select>
           </div>
         </div>
-      </section>
+      </Card>
     </div>
   );
 }

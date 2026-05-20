@@ -4,18 +4,17 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { initialUpdateProfileState, updateProfileAction } from "@/features/settings/actions";
 import type { SettingsProfile } from "@/features/settings/types";
+import { ActionFeedback } from "@/components/ui/action-feedback";
+import { Button } from "@/components/ui/button";
+import { FormField, Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 
 function SaveButton() {
   const { pending } = useFormStatus();
-
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-    >
+    <Button type="submit" disabled={pending}>
       {pending ? "Saving..." : "Save profile"}
-    </button>
+    </Button>
   );
 }
 
@@ -24,50 +23,32 @@ export function ProfileForm({ profile }: { profile: SettingsProfile }) {
 
   return (
     <form action={formAction} className="space-y-4">
-      <div>
-        <label htmlFor="email" className="mb-1 block text-sm font-medium text-slate-700">
-          Email
-        </label>
-        <input
+      <FormField label="Email" htmlFor="email">
+        <Input
           id="email"
           name="email"
           type="email"
           value={profile.email}
           readOnly
-          className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600"
+          className="border-border bg-surface-muted text-muted-foreground"
         />
-      </div>
+      </FormField>
+
+      <FormField label="Full name" htmlFor="fullName">
+        <Input id="fullName" name="fullName" type="text" required defaultValue={profile.fullName ?? ""} />
+      </FormField>
 
       <div>
-        <label htmlFor="fullName" className="mb-1 block text-sm font-medium text-slate-700">
-          Full name
-        </label>
-        <input
-          id="fullName"
-          name="fullName"
-          type="text"
-          required
-          defaultValue={profile.fullName ?? ""}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500"
-        />
+        <p className="text-sm font-medium text-foreground">Role</p>
+        <Badge variant="neutral" className="mt-2 capitalize">
+          {profile.role}
+        </Badge>
       </div>
 
-      <div>
-        <p className="text-sm font-medium text-slate-700">Role</p>
-        <p className="mt-1 text-sm capitalize text-slate-600">{profile.role}</p>
-      </div>
-
-      {state.status === "success" && state.message ? (
-        <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-          {state.message}
-        </p>
-      ) : null}
-
-      {state.status === "error" && state.message ? (
-        <p className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-          {state.message}
-        </p>
-      ) : null}
+      <ActionFeedback
+        status={state.status === "idle" ? "idle" : state.status}
+        message={state.message}
+      />
 
       <SaveButton />
     </form>

@@ -1,5 +1,9 @@
 import Link from "next/link";
 import { signupAction } from "@/features/auth/actions";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { FormField, Input } from "@/components/ui/input";
 
 type SignupPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -15,77 +19,43 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
   const error = getParamValue(params?.error);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
-      <section className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+    <main className="flex min-h-screen items-center justify-center bg-background p-4">
+      <Card padding="lg" className="w-full max-w-md shadow-card">
         <div className="mb-6">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Invexio</p>
-          <h1 className="mt-2 text-2xl font-semibold text-slate-900">Create account</h1>
-          <p className="mt-1 text-sm text-slate-600">Start managing your inventory in one place.</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Invexio</p>
+          <h1 className="mt-2 text-display text-foreground">Create account</h1>
+          <p className="mt-1 text-body-sm text-muted-foreground">
+            Start managing your inventory in one place.
+          </p>
         </div>
 
-        {error ? (
-          <p className="mb-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-            {error}
-          </p>
-        ) : null}
+        {error ? <Alert variant="danger" className="mb-4">{error}</Alert> : null}
 
         <form action={signupAction} className="space-y-4">
-          <div>
-            <label htmlFor="fullName" className="mb-1 block text-sm font-medium text-slate-700">
-              Full name
-            </label>
-            <input
-              id="fullName"
-              name="fullName"
-              type="text"
-              required
-              minLength={2}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-slate-500"
-            />
-          </div>
+          <FormField label="Full name" htmlFor="fullName">
+            <Input id="fullName" name="fullName" type="text" required minLength={2} />
+          </FormField>
 
-          <div>
-            <label htmlFor="email" className="mb-1 block text-sm font-medium text-slate-700">
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-slate-500"
-            />
-          </div>
+          <FormField label="Email" htmlFor="email">
+            <Input id="email" name="email" type="email" required />
+          </FormField>
 
-          <div>
-            <label htmlFor="password" className="mb-1 block text-sm font-medium text-slate-700">
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              minLength={8}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-slate-500"
-            />
-          </div>
+          <FormField label="Password" htmlFor="password">
+            <Input id="password" name="password" type="password" required minLength={8} />
+          </FormField>
 
-          <button
-            type="submit"
-            className="w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
-          >
+          <Button type="submit" fullWidth>
             Create account
-          </button>
+          </Button>
         </form>
 
-        <p className="mt-4 text-sm text-slate-600">
+        <p className="mt-4 text-body-sm text-muted-foreground">
           Already have an account?{" "}
-          <Link href="/login" className="font-medium text-slate-900 underline">
+          <Link href="/login" className="font-medium text-foreground underline">
             Log in
           </Link>
         </p>
-      </section>
+      </Card>
     </main>
   );
 }

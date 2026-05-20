@@ -4,12 +4,85 @@
 
 :root {
   color-scheme: light;
+
+  /* Spacing scale */
+  --space-page-x: 1rem;
+  --space-page-y: 1rem;
+  --space-card: 1.5rem;
+  --space-card-sm: 1rem;
+  --space-section: 1.5rem;
+
+  /* Radius scale */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-card: 0.75rem;
+  --radius-button: 0.5rem;
+
+  /* Semantic colors (RGB channels for Tailwind alpha) */
+  --color-background: 248 250 252;
+  --color-foreground: 15 23 42;
+  --color-surface: 255 255 255;
+  --color-surface-muted: 248 250 252;
+  --color-border: 226 232 240;
+  --color-border-strong: 203 213 225;
+  --color-muted: 241 245 249;
+  --color-muted-foreground: 100 116 139;
+
+  --color-primary: 15 23 42;
+  --color-primary-foreground: 248 250 252;
+  --color-primary-hover: 30 41 59;
+
+  --color-sidebar: 15 23 42;
+  --color-sidebar-foreground: 241 245 249;
+  --color-sidebar-muted: 148 163 184;
+  --color-sidebar-accent: 30 41 59;
+
+  --color-success: 5 150 105;
+  --color-success-foreground: 6 95 70;
+  --color-success-muted: 236 253 245;
+  --color-success-border: 167 243 208;
+
+  --color-warning: 217 119 6;
+  --color-warning-foreground: 180 83 9;
+  --color-warning-muted: 255 251 235;
+  --color-warning-border: 253 230 138;
+
+  --color-danger: 225 29 72;
+  --color-danger-foreground: 190 18 60;
+  --color-danger-muted: 255 241 242;
+  --color-danger-border: 254 205 211;
+
+  --color-info: 37 99 235;
+  --color-info-foreground: 29 78 216;
+  --color-info-muted: 239 246 255;
+  --color-info-border: 191 219 254;
+
+  /* Shadows */
+  --shadow-card: 0 1px 2px 0 rgb(15 23 42 / 0.04);
+  --shadow-drawer: 0 10px 40px -10px rgb(15 23 42 / 0.15);
+  --shadow-modal: 0 20px 50px -12px rgb(15 23 42 / 0.2);
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease;
 }
 
-body {
-  margin: 0;
-  min-height: 100vh;
-  background-color: #f8fafc;
-  color: #0f172a;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+@media (min-width: 768px) {
+  :root {
+    --space-page-x: 1.5rem;
+    --space-page-y: 1.5rem;
+  }
+}
+
+@layer base {
+  body {
+    @apply min-h-screen bg-background text-foreground antialiased;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  * {
+    @apply border-border;
+  }
 }

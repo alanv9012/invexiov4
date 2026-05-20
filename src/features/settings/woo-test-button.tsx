@@ -3,18 +3,17 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { initialWooTestState, testWooConnectionAction } from "@/features/settings/actions";
+import { ActionFeedback } from "@/components/ui/action-feedback";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 function TestButton({ disabled }: { disabled: boolean }) {
   const { pending } = useFormStatus();
 
   return (
-    <button
-      type="submit"
-      disabled={disabled || pending}
-      className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-    >
+    <Button type="submit" disabled={disabled || pending}>
       {pending ? "Testing..." : "Test connection"}
-    </button>
+    </Button>
   );
 }
 
@@ -28,22 +27,13 @@ export function WooTestButton({ canTest }: { canTest: boolean }) {
       </form>
 
       {!canTest ? (
-        <p className="text-sm text-amber-700">
-          Configure all WooCommerce environment variables before testing.
-        </p>
+        <Alert variant="warning">Configure all WooCommerce environment variables before testing.</Alert>
       ) : null}
 
-      {state.status === "success" && state.message ? (
-        <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-          {state.message}
-        </p>
-      ) : null}
-
-      {state.status === "error" && state.message ? (
-        <p className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-          {state.message}
-        </p>
-      ) : null}
+      <ActionFeedback
+        status={state.status === "idle" ? "idle" : state.status}
+        message={state.message}
+      />
     </div>
   );
 }

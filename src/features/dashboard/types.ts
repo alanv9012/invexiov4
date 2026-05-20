@@ -1,3 +1,5 @@
+import type { DailyCountPoint, DailyMovementPoint, TrendInsight } from "@/features/dashboard/analytics";
+
 export type DashboardRecentOrder = {
   id: string;
   orderNumber: string | null;
@@ -22,6 +24,39 @@ export type DashboardSyncSummaryItem = {
   count: number;
 };
 
+export type DashboardLowStockProduct = {
+  id: string;
+  name: string;
+  sku: string;
+  stockQuantity: number;
+};
+
+export type DashboardActivityItem =
+  | {
+      type: "order";
+      id: string;
+      title: string;
+      subtitle: string;
+      timestamp: string;
+      status: string;
+      amount: number;
+    }
+  | {
+      type: "movement";
+      id: string;
+      title: string;
+      subtitle: string;
+      timestamp: string;
+      changeQuantity: number;
+      source: string;
+    };
+
+export type DashboardMetricTrends = {
+  orders: TrendInsight;
+  movements: TrendInsight;
+  lowStock: TrendInsight;
+};
+
 export type DashboardData = {
   totalProducts: number;
   lowStockProducts: number;
@@ -31,5 +66,10 @@ export type DashboardData = {
   recentOrders: DashboardRecentOrder[];
   recentMovements: DashboardRecentMovement[];
   syncSummary: DashboardSyncSummaryItem[];
+  orderVolumeByDay: DailyCountPoint[];
+  movementActivityByDay: DailyMovementPoint[];
+  lowStockItems: DashboardLowStockProduct[];
+  activityFeed: DashboardActivityItem[];
+  metricTrends: DashboardMetricTrends;
   errorMessage: string | null;
 };

@@ -1,14 +1,19 @@
 import { formatDateTime, formatMoney } from "@/lib/format";
-import type { OrderRow, OrderSource, OrderSyncStatus } from "@/features/orders/types";
+import type { OrderRow, OrderSource } from "@/features/orders/types";
+import { OrderStatusBadge, OrderSyncStatusBadge } from "@/components/ui/inventory-badges";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
 
 type OrdersTableProps = {
   orders: OrderRow[];
-};
-
-const syncStyles: Record<OrderSyncStatus, string> = {
-  synced: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  pending: "bg-amber-50 text-amber-700 border-amber-200",
-  failed: "bg-rose-50 text-rose-700 border-rose-200"
 };
 
 const sourceLabels: Record<OrderSource, string> = {
@@ -19,41 +24,43 @@ const sourceLabels: Record<OrderSource, string> = {
 
 export function OrdersTable({ orders }: OrdersTableProps) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
-      <table className="min-w-full divide-y divide-slate-200">
-        <thead className="bg-slate-50">
-          <tr className="text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-            <th className="px-4 py-3">Order #</th>
-            <th className="px-4 py-3">Customer</th>
-            <th className="px-4 py-3">Status</th>
-            <th className="px-4 py-3">Total</th>
-            <th className="px-4 py-3">Source</th>
-            <th className="px-4 py-3">Created</th>
-            <th className="px-4 py-3">Sync</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100">
+    <TableContainer>
+      <Table>
+        <TableHeader>
+          <TableRow className="hover:bg-transparent">
+            <TableHead>Order #</TableHead>
+            <TableHead>Customer</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Total</TableHead>
+            <TableHead>Source</TableHead>
+            <TableHead>Created</TableHead>
+            <TableHead>Sync</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {orders.map((order) => (
-            <tr key={order.id} className="text-sm text-slate-700">
-              <td className="px-4 py-3 font-mono text-xs font-medium text-slate-900">
+            <TableRow key={order.id}>
+              <TableCell className="font-mono text-caption font-medium text-foreground">
                 {order.orderNumber}
-              </td>
-              <td className="px-4 py-3 text-slate-900">{order.customerName ?? "—"}</td>
-              <td className="px-4 py-3 capitalize">{order.status.replace("-", " ")}</td>
-              <td className="px-4 py-3">{formatMoney(order.total, order.currency)}</td>
-              <td className="px-4 py-3">{sourceLabels[order.source]}</td>
-              <td className="px-4 py-3 text-slate-600">{formatDateTime(order.createdAt)}</td>
-              <td className="px-4 py-3">
-                <span
-                  className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold capitalize ${syncStyles[order.syncStatus]}`}
-                >
-                  {order.syncStatus}
-                </span>
-              </td>
-            </tr>
+              </TableCell>
+              <TableCell className="text-foreground">{order.customerName ?? "—"}</TableCell>
+              <TableCell>
+                <OrderStatusBadge status={order.status} />
+              </TableCell>
+              <TableCell>{formatMoney(order.total, order.currency)}</TableCell>
+              <TableCell>
+                <Badge variant="neutral" size="sm">
+                  {sourceLabels[order.source]}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-muted-foreground">{formatDateTime(order.createdAt)}</TableCell>
+              <TableCell>
+                <OrderSyncStatusBadge status={order.syncStatus} />
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
-    </div>
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 }
