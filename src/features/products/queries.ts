@@ -2,8 +2,17 @@ import "server-only";
 
 import { z } from "zod";
 import { firstSearchParam } from "@/lib/search-params";
+import { getPaginationMeta, parseTableListParams } from "@/lib/ui/table-params";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
-import type { ProductItem, ProductStatusFilter, ProductStockFilter, ProductsSearchParams } from "@/features/products/types";
+import {
+  PRODUCT_SORT_KEYS,
+  type ProductItem,
+  type ProductSortKey,
+  type ProductsListResult,
+  type ProductStatusFilter,
+  type ProductStockFilter,
+  type ProductsSearchParams
+} from "@/features/products/types";
 
 const productsSearchSchema = z.object({
   q: z.string().trim().optional(),
@@ -15,6 +24,10 @@ export function parseProductsSearchParams(input: ProductsSearchParams): {
   query: string;
   status: ProductStatusFilter;
   stock: ProductStockFilter;
+  page: number;
+  pageSize: number;
+  sort: ProductSortKey;
+  sortDir: "asc" | "desc";
 } {
   const parsed = productsSearchSchema.safeParse({
     q: firstSearchParam(input.q),
@@ -22,18 +35,23 @@ export function parseProductsSearchParams(input: ProductsSearchParams): {
     stock: firstSearchParam(input.stock)
   });
 
+  const table = parseTableListParams(input, "updated_at", PRODUCT_SORT_KEYS);
+
   if (!parsed.success) {
     return {
       query: "",
       status: "all",
-      stock: "all"
+      stock: "all",
+      ...table,
+      sort: "updated_at"
     };
   }
 
   return {
     query: parsed.data.q ?? "",
     status: parsed.data.status,
-    stock: parsed.data.stock
+    stock: parsed.data.stock,
+    ...table
   };
 }
 
@@ -42,17 +60,44 @@ function buildSyncStatus(lastSyncedAt: string | null, wooProductId: number | nul
   return "synced";
 }
 
-export async function getProducts(filters: {
-  query: string;
-  status: ProductStatusFilter;
-  stock: ProductStockFilter;
-}): Promise<{ products: ProductItem[]; errorMessage: string | null }> {
+function applyProductStatusFilter<T extends { not: Function; or: Function }>(
+  queryBuilder: T,
+  status: ProductStatusFilter
+): T {
+  if (status === "synced") {
+    return queryBuilder.not("woo_product_id", "is", null).not("last_synced_at", "is", null) as T;
+  }
+
+  if (status === "pending") {
+    return queryBuilder.or("woo_product_id.is.null,last_synced_at.is.null") as T;
+  }
+
+  return queryBuilder;
+}
+
+export async function getProducts(
+  filters: ReturnType<typeof parseProductsSearchParams>
+): Promise<ProductsListResult> {
+  const empty: ProductsListResult = {
+    products: [],
+    totalCount: 0,
+    page: filters.page,
+    pageSize: filters.pageSize,
+    sort: filters.sort,
+    sortDir: filters.sortDir,
+    errorMessage: null
+  };
+
   try {
     const supabase = await getSupabaseServerClient();
+    const rangeFrom = (filters.page - 1) * filters.pageSize;
+    const rangeTo = rangeFrom + filters.pageSize - 1;
+
     let queryBuilder = supabase
       .from("products")
-      .select("id, sku, name, price, stock_quantity, image_url, woo_product_id, last_synced_at")
-      .order("updated_at", { ascending: false });
+      .select("id, sku, name, price, stock_quantity, image_url, woo_product_id, last_synced_at", {
+        count: "exact"
+      });
 
     if (filters.query) {
       queryBuilder = queryBuilder.or(`name.ilike.%${filters.query}%,sku.ilike.%${filters.query}%`);
@@ -66,31 +111,40 @@ export async function getProducts(filters: {
       queryBuilder = queryBuilder.gt("stock_quantity", 10);
     }
 
-    const { data, error } = await queryBuilder.limit(100);
+    queryBuilder = applyProductStatusFilter(queryBuilder, filters.status);
+
+    const { data, error, count } = await queryBuilder
+      .order(filters.sort, { ascending: filters.sortDir === "asc" })
+      .range(rangeFrom, rangeTo);
 
     if (error) {
-      return { products: [], errorMessage: "Unable to load products right now." };
+      return { ...empty, errorMessage: "Unable to load products right now." };
     }
 
-    const mappedProducts: ProductItem[] = (data ?? [])
-      .map((row) => {
-        const syncStatus = buildSyncStatus(row.last_synced_at, row.woo_product_id);
+    const totalCount = count ?? 0;
+    const { safePage } = getPaginationMeta(filters.page, filters.pageSize, totalCount);
 
-        return {
-          id: row.id,
-          thumbnailPath: row.image_url || "/product-placeholder.svg",
-          sku: row.sku,
-          name: row.name,
-          price: Number(row.price ?? 0),
-          stockQuantity: row.stock_quantity,
-          syncStatus,
-          lastSyncedAt: row.last_synced_at
-        };
-      })
-      .filter((item) => filters.status === "all" || item.syncStatus === filters.status);
+    const products: ProductItem[] = (data ?? []).map((row) => ({
+      id: row.id,
+      thumbnailPath: row.image_url || "/product-placeholder.svg",
+      sku: row.sku,
+      name: row.name,
+      price: Number(row.price ?? 0),
+      stockQuantity: row.stock_quantity,
+      syncStatus: buildSyncStatus(row.last_synced_at, row.woo_product_id),
+      lastSyncedAt: row.last_synced_at
+    }));
 
-    return { products: mappedProducts, errorMessage: null };
+    return {
+      products,
+      totalCount,
+      page: safePage,
+      pageSize: filters.pageSize,
+      sort: filters.sort,
+      sortDir: filters.sortDir,
+      errorMessage: null
+    };
   } catch {
-    return { products: [], errorMessage: "Unable to load products right now." };
+    return { ...empty, errorMessage: "Unable to load products right now." };
   }
 }

@@ -1,11 +1,14 @@
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { Card } from "@/components/ui/card";
+import { LoadingRegion } from "@/components/ui/loading-region";
+import { PageContent } from "@/components/ui/page-content";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function SettingsLoadingPage() {
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <PageContent>
+        <LoadingRegion label="Loading settings">
         <Skeleton className="h-8 w-32" />
         <Card padding="md" className="space-y-3">
           <Skeleton className="h-6 w-48" />
@@ -19,7 +22,8 @@ export default function SettingsLoadingPage() {
           <Skeleton className="h-6 w-40" />
           <Skeleton className="h-24 w-full" />
         </Card>
-      </div>
+        </LoadingRegion>
+      </PageContent>
     </DashboardLayout>
   );
 }

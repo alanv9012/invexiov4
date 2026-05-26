@@ -29,7 +29,7 @@ export function DashboardContent({ data }: DashboardContentProps) {
     data.activityFeed.length === 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-page-enter">
       <SectionHeader
         size="page"
         title="Dashboard"
@@ -66,6 +66,7 @@ export function DashboardContent({ data }: DashboardContentProps) {
         {data.syncSummary.length === 0 ? (
           <div className="mt-4">
             <EmptyState
+              variant="inline"
               title="No sync activity"
               description="Run a product or order sync to see status breakdowns here."
               action={<Button href="/sync" size="sm">Go to sync</Button>}

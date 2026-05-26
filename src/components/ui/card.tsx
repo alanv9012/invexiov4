@@ -8,13 +8,13 @@ export type CardProps = HTMLAttributes<HTMLDivElement> & {
 
 const paddingClasses = {
   none: "",
-  sm: "p-card-sm",
-  md: "p-card",
-  lg: "p-8"
+  sm: "p-3 sm:p-card-sm",
+  md: "p-4 sm:p-card",
+  lg: "p-5 sm:p-8"
 };
 
 const variantClasses = {
-  default: "border-border bg-surface shadow-card",
+  default: "border-border bg-surface shadow-card transition-shadow duration-150",
   muted: "border-border bg-surface-muted",
   dashed: "border-dashed border-border-strong bg-surface"
 };

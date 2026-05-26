@@ -32,7 +32,7 @@ export function SettingsContent({ data }: SettingsContentProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-page-enter">
       <SectionHeader
         size="page"
         title="Settings"

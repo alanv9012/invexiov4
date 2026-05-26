@@ -18,4 +18,21 @@ export type ProductsSearchParams = {
   q?: string | string[];
   status?: string | string[];
   stock?: string | string[];
+  page?: string | string[];
+  pageSize?: string | string[];
+  sort?: string | string[];
+  dir?: string | string[];
+};
+
+export const PRODUCT_SORT_KEYS = ["updated_at", "name", "sku", "price", "stock_quantity", "last_synced_at"] as const;
+export type ProductSortKey = (typeof PRODUCT_SORT_KEYS)[number];
+
+export type ProductsListResult = {
+  products: ProductItem[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  sort: ProductSortKey;
+  sortDir: "asc" | "desc";
+  errorMessage: string | null;
 };

@@ -26,7 +26,13 @@ export function HorizontalBarList({
 }: HorizontalBarListProps) {
   if (items.length === 0) {
     return (
-      <p className={cn("rounded-lg border border-dashed border-border bg-surface-muted/50 px-4 py-8 text-center text-body-sm text-muted-foreground", className)}>
+      <p
+        role="status"
+        className={cn(
+          "animate-fade-in rounded-lg border border-dashed border-border bg-surface-muted/50 px-4 py-8 text-center text-body-sm text-muted-foreground",
+          className
+        )}
+      >
         {emptyMessage}
       </p>
     );
@@ -61,7 +67,10 @@ export function HorizontalBarList({
         return (
           <li key={item.id}>
             {item.href ? (
-              <Link href={item.href} className="block rounded-md p-1 transition hover:bg-surface-muted">
+              <Link
+                href={item.href}
+                className="block rounded-md p-1 transition-colors duration-150 hover:bg-surface-muted"
+              >
                 {content}
               </Link>
             ) : (

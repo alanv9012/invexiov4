@@ -93,7 +93,11 @@ export function MetricCard({
 
   return (
     <article
-      className={cn("relative overflow-hidden rounded-card border p-card", styles.card, className)}
+      className={cn(
+        "relative overflow-hidden rounded-card border p-card transition-shadow duration-150 hover:shadow-card",
+        styles.card,
+        className
+      )}
       {...props}
     >
       <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-primary/[0.03]" />
@@ -104,7 +108,7 @@ export function MetricCard({
             {icon ? <span className="text-muted-foreground">{icon}</span> : null}
             <p className="text-body-sm font-medium text-muted-foreground">{label}</p>
           </div>
-          <p className={cn("mt-2 text-3xl font-semibold tracking-tight tabular-nums", styles.value)}>
+          <p className={cn("mt-2 text-2xl font-semibold tracking-tight tabular-nums sm:text-3xl", styles.value)}>
             {value}
           </p>
           {(trend?.percentChange != null || trend?.label) ? (
@@ -118,7 +122,9 @@ export function MetricCard({
           {hint ? <p className="mt-1 text-caption text-muted-foreground">{hint}</p> : null}
         </div>
         {sparkline && sparkline.length > 0 ? (
-          <Sparkline values={sparkline} strokeClassName={styles.accent} fillClassName="fill-primary/5" />
+          <div className="hidden shrink-0 sm:block">
+            <Sparkline values={sparkline} strokeClassName={styles.accent} fillClassName="fill-primary/5" />
+          </div>
         ) : null}
       </div>
     </article>

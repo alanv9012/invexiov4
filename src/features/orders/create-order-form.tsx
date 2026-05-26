@@ -6,11 +6,13 @@ import { useRouter } from "next/navigation";
 import { createManualOrderAction } from "@/features/orders/actions";
 import { initialCreateManualOrderState } from "@/features/orders/create-manual-order-state";
 import type { OrderFormProduct } from "@/features/orders/queries";
-import { ActionFeedback } from "@/components/ui/action-feedback";
+import { useActionToast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { FormField, Input, Select, Textarea } from "@/components/ui/input";
+import { cn } from "@/lib/ui/cn";
+
 type LineRow = {
   key: string;
   productId: string;
@@ -19,22 +21,14 @@ type LineRow = {
 
 type CreateOrderFormProps = {
   products: OrderFormProduct[];
+  className?: string;
 };
-
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" disabled={pending}>
-      {pending ? "Creating order..." : "Create order"}
-    </Button>
-  );
-}
 
 function newLineRow(): LineRow {
   return { key: crypto.randomUUID(), productId: "", quantity: 1 };
 }
 
-export function CreateOrderForm({ products }: CreateOrderFormProps) {
+export function CreateOrderForm({ products, className }: CreateOrderFormProps) {
   const [open, setOpen] = useState(false);
   const [lines, setLines] = useState<LineRow[]>([newLineRow()]);
   const [state, formAction] = useActionState(createManualOrderAction, initialCreateManualOrderState);
@@ -86,7 +80,7 @@ export function CreateOrderForm({ products }: CreateOrderFormProps) {
 
   return (
     <>
-      <Button type="button" onClick={() => setOpen(true)}>
+      <Button type="button" onClick={() => setOpen(true)} className={cn("w-full sm:w-auto", className)}>
         Create manual order
       </Button>
 
@@ -96,111 +90,135 @@ export function CreateOrderForm({ products }: CreateOrderFormProps) {
         variant="drawer"
         title="New manual order"
         description="Stock is reduced through inventory movements when the order is saved."
-        className="max-w-lg"
+        submitOnEnter
       >
-        <form action={formAction} className="space-y-4">
+        <form action={formAction} className="flex min-h-0 flex-1 flex-col">
           <input type="hidden" name="lineItems" value={lineItemsJson} />
 
-          <FormField label="Customer name" htmlFor="customerName">
-            <Input id="customerName" name="customerName" required />
-          </FormField>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <FormField label="Email (optional)" htmlFor="customerEmail">
-              <Input id="customerEmail" name="customerEmail" type="email" />
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain pr-0.5">
+            <FormField label="Customer name" htmlFor="customerName">
+              <Input id="customerName" name="customerName" required autoComplete="name" />
             </FormField>
-            <FormField label="Phone (optional)" htmlFor="customerPhone">
-              <Input id="customerPhone" name="customerPhone" type="tel" />
-            </FormField>
-          </div>
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-foreground">Products</p>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setLines((current) => [...current, newLineRow()])}
-              >
-                Add product
-              </Button>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <FormField label="Email (optional)" htmlFor="customerEmail">
+                <Input id="customerEmail" name="customerEmail" type="email" autoComplete="email" />
+              </FormField>
+              <FormField label="Phone (optional)" htmlFor="customerPhone">
+                <Input id="customerPhone" name="customerPhone" type="tel" autoComplete="tel" />
+              </FormField>
             </div>
 
-            {lines.map((line, index) => (
-              <div
-                key={line.key}
-                className="grid gap-2 rounded-md border border-border p-3 sm:grid-cols-[1fr_100px_auto]"
-              >
-                <Select
-                  value={line.productId}
-                  onChange={(event) =>
-                    setLines((current) =>
-                      current.map((row) =>
-                        row.key === line.key ? { ...row, productId: event.target.value } : row
-                      )
-                    )
-                  }
-                  required={index === 0}
+            <div className="space-y-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm font-medium text-foreground">Products</p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="w-full sm:w-auto"
+                  onClick={() => setLines((current) => [...current, newLineRow()])}
                 >
-                  <option value="">Select product</option>
-                  {products.map((product) => (
-                    <option key={product.id} value={product.id}>
-                      {product.name} ({product.sku}) — {product.stockQuantity} in stock
-                    </option>
-                  ))}
-                </Select>
-
-                <Input
-                  type="number"
-                  min={1}
-                  value={line.quantity}
-                  onChange={(event) =>
-                    setLines((current) =>
-                      current.map((row) =>
-                        row.key === line.key
-                          ? { ...row, quantity: Number(event.target.value) || 1 }
-                          : row
-                      )
-                    )
-                  }
-                />
-
-                {lines.length > 1 ? (
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => setLines((current) => current.filter((row) => row.key !== line.key))}
-                  >
-                    Remove
-                  </Button>
-                ) : (
-                  <span />
-                )}
+                  Add product
+                </Button>
               </div>
-            ))}
+
+              {lines.map((line, index) => (
+                <div
+                  key={line.key}
+                  className="space-y-2 rounded-md border border-border p-3 sm:grid sm:grid-cols-[1fr_6rem_auto] sm:items-end sm:gap-2"
+                >
+                  <Select
+                    value={line.productId}
+                    onChange={(event) =>
+                      setLines((current) =>
+                        current.map((row) =>
+                          row.key === line.key ? { ...row, productId: event.target.value } : row
+                        )
+                      )
+                    }
+                    required={index === 0}
+                  >
+                    <option value="">Select product</option>
+                    {products.map((product) => (
+                      <option key={product.id} value={product.id}>
+                        {product.name} ({product.sku}) — {product.stockQuantity} in stock
+                      </option>
+                    ))}
+                  </Select>
+
+                  <FormField label="Qty" htmlFor={`qty-${line.key}`} className="sm:space-y-1">
+                    <Input
+                      id={`qty-${line.key}`}
+                      type="number"
+                      min={1}
+                      inputMode="numeric"
+                      value={line.quantity}
+                      onChange={(event) =>
+                        setLines((current) =>
+                          current.map((row) =>
+                            row.key === line.key
+                              ? { ...row, quantity: Number(event.target.value) || 1 }
+                              : row
+                          )
+                        )
+                      }
+                    />
+                  </FormField>
+
+                  {lines.length > 1 ? (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      className="w-full sm:w-auto"
+                      onClick={() => setLines((current) => current.filter((row) => row.key !== line.key))}
+                    >
+                      Remove
+                    </Button>
+                  ) : (
+                    <span className="hidden sm:block" />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <p className="text-body-sm font-medium text-foreground">Order total: {formattedTotal}</p>
+
+            <FormField label="Notes (optional)" htmlFor="notes">
+              <Textarea id="notes" name="notes" rows={3} />
+            </FormField>
           </div>
 
-          <p className="text-body-sm font-medium text-foreground">Order total: {formattedTotal}</p>
-
-          <FormField label="Notes (optional)" htmlFor="notes">
-            <Textarea id="notes" name="notes" rows={3} />
-          </FormField>
-
-          <ActionFeedback
-            status={state.status === "idle" ? "idle" : state.status}
-            message={state.message}
-          />
-
-          <div className="flex justify-end gap-2 border-t border-border pt-4">
-            <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-            <SubmitButton />
-          </div>
+          <CreateOrderFormFooter state={state} onCancel={() => setOpen(false)} />
         </form>
       </Dialog>
     </>
+  );
+}
+
+function CreateOrderFormFooter({
+  state,
+  onCancel
+}: {
+  state: { status: string; message: string | null };
+  onCancel: () => void;
+}) {
+  const { pending } = useFormStatus();
+
+  useActionToast(state, {
+    pending,
+    loadingMessage: "Creating order…"
+  });
+
+  return (
+    <div className="sticky bottom-0 -mx-4 mt-4 flex flex-col-reverse gap-2 border-t border-border bg-surface px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:mx-0 sm:flex-row sm:justify-end sm:px-0 sm:py-4">
+      <Button type="button" variant="secondary" onClick={onCancel} className="w-full sm:w-auto">
+        Cancel
+      </Button>
+      <Button type="submit" disabled={pending} className="w-full sm:w-auto">
+        {pending ? "Creating order…" : "Create order"}
+      </Button>
+    </div>
   );
 }

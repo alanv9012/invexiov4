@@ -4,17 +4,23 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { syncOrdersFromWooCommerceAction } from "@/features/sync/actions";
 import { initialSyncOrdersState } from "@/features/sync/sync-action-state";
-import { ActionFeedback } from "@/components/ui/action-feedback";
+import type { SyncOrdersState } from "@/features/sync/sync-action-state";
+import { useActionToast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 
-function SyncOrdersButton({ disabled }: { disabled: boolean }) {
+function OrderSyncForm({ state, disabled }: { state: SyncOrdersState; disabled: boolean }) {
   const { pending } = useFormStatus();
+
+  useActionToast(state, {
+    pending,
+    loadingMessage: "Syncing orders from WooCommerce…"
+  });
 
   return (
     <Button type="submit" disabled={disabled || pending}>
-      {pending ? "Syncing..." : "Sync orders from WooCommerce"}
+      {pending ? "Syncing…" : "Sync orders from WooCommerce"}
     </Button>
   );
 }
@@ -41,15 +47,8 @@ export function OrdersSyncCard({ wooConfigured }: OrdersSyncCardProps) {
         action={wooConfigured ? formAction : undefined}
         onSubmit={wooConfigured ? undefined : (event) => event.preventDefault()}
       >
-        <SyncOrdersButton disabled={!wooConfigured} />
+        <OrderSyncForm state={state} disabled={!wooConfigured} />
       </form>
-
-      <div className="mt-4">
-        <ActionFeedback
-          status={state.status === "idle" ? "idle" : state.status}
-          message={state.message}
-        />
-      </div>
     </Card>
   );
 }

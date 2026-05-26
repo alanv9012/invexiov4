@@ -3,6 +3,7 @@ import { OrdersSyncCard } from "@/features/sync/orders-sync-card";
 import { ProductsSyncCard } from "@/features/sync/products-sync-card";
 import { getSyncPageData } from "@/features/sync/queries";
 import { SyncWooNotConfiguredAlert } from "@/features/sync/sync-woo-not-configured-alert";
+import { PageContent } from "@/components/ui/page-content";
 import { SectionHeader } from "@/components/ui/section-header";
 
 export default function SyncPage() {
@@ -10,7 +11,7 @@ export default function SyncPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-4">
+      <PageContent>
         <SectionHeader
           size="page"
           title="Sync"
@@ -19,7 +20,7 @@ export default function SyncPage() {
         {!wooConfigured ? <SyncWooNotConfiguredAlert /> : null}
         <ProductsSyncCard wooConfigured={wooConfigured} />
         <OrdersSyncCard wooConfigured={wooConfigured} />
-      </div>
+      </PageContent>
     </DashboardLayout>
   );
 }

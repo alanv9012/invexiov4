@@ -16,13 +16,13 @@ const variantClasses: Record<ButtonVariant, string> = {
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: "h-8 px-3 text-xs",
-  md: "h-9 px-4 text-sm",
-  lg: "h-10 px-5 text-sm"
+  sm: "min-h-10 px-3 text-xs",
+  md: "min-h-11 px-4 text-sm",
+  lg: "min-h-12 px-5 text-sm"
 };
 
 const baseClasses =
-  "inline-flex items-center justify-center gap-2 rounded-button font-medium transition duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex items-center justify-center gap-2 rounded-button font-medium transition-[color,background-color,border-color,transform,box-shadow] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.98] motion-reduce:active:scale-100 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100";
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
@@ -52,7 +52,12 @@ export function Button({
 
   if (href) {
     return (
-      <Link href={href} className={classes} aria-disabled={disabled}>
+      <Link
+        href={href}
+        className={classes}
+        aria-disabled={disabled || undefined}
+        tabIndex={disabled ? -1 : undefined}
+      >
         {children}
       </Link>
     );

@@ -48,6 +48,7 @@ export function ActivityFeed({ items }: ActivityFeedProps) {
       {items.length === 0 ? (
         <div className="mt-4">
           <EmptyState
+            variant="inline"
             title="No activity yet"
             description="Orders and stock adjustments will appear here as your team uses Invexio."
             action={
@@ -68,7 +69,7 @@ export function ActivityFeed({ items }: ActivityFeedProps) {
             <li key={`${item.type}-${item.id}`}>
               <Link
                 href={item.type === "order" ? "/orders" : "/products"}
-                className="flex gap-3 rounded-lg p-3 transition hover:bg-surface-muted"
+                className="flex gap-3 rounded-lg p-3 transition-colors duration-150 hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
               >
                 <ActivityIcon type={item.type} />
                 <div className="min-w-0 flex-1">

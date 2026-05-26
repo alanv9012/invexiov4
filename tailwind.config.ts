@@ -86,6 +86,30 @@ const config: Config = {
         DEFAULT: "150ms",
         slow: "250ms"
       },
+      transitionTimingFunction: {
+        DEFAULT: "ease",
+        out: "cubic-bezier(0.16, 1, 0.3, 1)"
+      },
+      keyframes: {
+        "fade-in": {
+          from: { opacity: "0" },
+          to: { opacity: "1" }
+        },
+        "slide-up": {
+          from: { opacity: "0", transform: "translateY(6px)" },
+          to: { opacity: "1", transform: "translateY(0)" }
+        },
+        shimmer: {
+          "0%": { backgroundPosition: "200% 0" },
+          "100%": { backgroundPosition: "-200% 0" }
+        }
+      },
+      animation: {
+        "fade-in": "fade-in 200ms ease-out forwards",
+        "slide-up": "slide-up 240ms cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        "page-enter": "slide-up 280ms cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        shimmer: "shimmer 1.4s ease-in-out infinite"
+      },
       screens: {
         xs: "480px"
       },

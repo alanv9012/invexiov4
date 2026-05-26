@@ -7,7 +7,7 @@ export type SkeletonProps = HTMLAttributes<HTMLDivElement>;
 export function Skeleton({ className, ...props }: SkeletonProps) {
   return (
     <div
-      className={cn("animate-pulse rounded-md bg-muted", className)}
+      className={cn("skeleton-shimmer animate-shimmer rounded-md", className)}
       aria-hidden="true"
       {...props}
     />
@@ -24,7 +24,11 @@ export function SkeletonTable({ rows = 5, columns = 4 }: SkeletonTableProps) {
     <Card padding="md" className="space-y-3">
       <Skeleton className="h-5 w-48" />
       {Array.from({ length: rows }).map((_, rowIndex) => (
-        <div key={rowIndex} className="grid gap-3" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+        <div
+          key={rowIndex}
+          className="grid gap-3"
+          style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+        >
           {Array.from({ length: columns }).map((__, colIndex) => (
             <Skeleton key={colIndex} className="h-10" />
           ))}

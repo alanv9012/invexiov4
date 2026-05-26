@@ -19,8 +19,8 @@ export function SectionHeader({
   return (
     <div
       className={cn(
-        "flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between",
-        size === "page" && "mb-2",
+        "flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between",
+        size === "page" && "gap-4",
         className
       )}
     >
@@ -35,7 +35,7 @@ export function SectionHeader({
         </h2>
         {description ? <p className="text-body-sm text-muted-foreground">{description}</p> : null}
       </div>
-      {action ? <div className="shrink-0">{action}</div> : null}
+      {action ? <div className="w-full shrink-0 sm:w-auto [&_button]:w-full sm:[&_button]:w-auto">{action}</div> : null}
     </div>
   );
 }

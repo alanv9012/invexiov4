@@ -1,11 +1,12 @@
 import { Card } from "@/components/ui/card";
+import { LoadingRegion } from "@/components/ui/loading-region";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SkeletonMetrics } from "@/components/ui/skeleton";
 import { SectionHeader } from "@/components/ui/section-header";
 
 export function DashboardLoading() {
   return (
-    <div className="space-y-6">
+    <LoadingRegion label="Loading dashboard" className="space-y-6">
       <SectionHeader
         size="page"
         title={<Skeleton className="h-8 w-44" />}
@@ -47,6 +48,6 @@ export function DashboardLoading() {
           ))}
         </div>
       </Card>
-    </div>
+    </LoadingRegion>
   );
 }

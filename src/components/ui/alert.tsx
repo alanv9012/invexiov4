@@ -17,14 +17,20 @@ export type AlertProps = HTMLAttributes<HTMLDivElement> & {
 };
 
 export function Alert({ className, variant = "neutral", title, children, ...props }: AlertProps) {
+  const isAlert = variant === "danger" || variant === "warning";
+
   return (
     <div
-      role="status"
-      className={cn("rounded-md border px-3 py-2 text-body-sm", variantClasses[variant], className)}
+      role={isAlert ? "alert" : "status"}
+      className={cn(
+        "animate-fade-in rounded-md border px-4 py-3 text-body-sm",
+        variantClasses[variant],
+        className
+      )}
       {...props}
     >
-      {title ? <p className="font-semibold">{title}</p> : null}
-      {children ? <div className={cn(title && "mt-1")}>{children}</div> : null}
+      {title ? <p className="font-semibold leading-snug">{title}</p> : null}
+      {children ? <div className={cn(title && "mt-1 leading-relaxed")}>{children}</div> : null}
     </div>
   );
 }
