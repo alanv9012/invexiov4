@@ -2,7 +2,8 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { initialWooTestState, testWooConnectionAction } from "@/features/settings/actions";
+import { testWooConnectionAction } from "@/features/settings/actions";
+import { initialWooTestState } from "@/features/settings/types";
 import { ActionFeedback } from "@/components/ui/action-feedback";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";

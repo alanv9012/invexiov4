@@ -1,9 +1,10 @@
 import Link from "next/link";
+import type { ComponentProps } from "react";
 import { buildQueryString, type SortDirection } from "@/lib/ui/table-params";
-import { TableHead, type TableHeadProps } from "@/components/ui/table";
+import { TableHead } from "@/components/ui/table";
 import { cn } from "@/lib/ui/cn";
 
-type SortableTableHeadProps = TableHeadProps & {
+type SortableTableHeadProps = ComponentProps<typeof TableHead> & {
   label: string;
   sortKey: string;
   pathname: string;

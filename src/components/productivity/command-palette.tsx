@@ -80,7 +80,7 @@ export function CommandPalette({ open, onClose, initialQuery = "" }: CommandPale
 
     const actions: PaletteItem[] = [
       {
-        kind: "action",
+        kind: "action" as const,
         id: "action-create-order",
         label: "Create manual order",
         hint: "Orders page",

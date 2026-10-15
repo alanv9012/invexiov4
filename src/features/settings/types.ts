@@ -32,3 +32,13 @@ export type UpdateProfileState = {
   status: "idle" | "success" | "error";
   message: string | null;
 };
+
+export const initialWooTestState: WooTestConnectionState = {
+  status: "idle",
+  message: null
+};
+
+export const initialUpdateProfileState: UpdateProfileState = {
+  status: "idle",
+  message: null
+};

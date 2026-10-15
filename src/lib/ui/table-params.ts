@@ -5,10 +5,10 @@ export const MAX_PAGE_SIZE = 50;
 
 export type SortDirection = "asc" | "desc";
 
-export type TableListParams = {
+export type TableListParams<TSort extends string = string> = {
   page: number;
   pageSize: number;
-  sort: string;
+  sort: TSort;
   sortDir: SortDirection;
 };
 
@@ -28,13 +28,13 @@ export function parseSortDirParam(value: string | undefined): SortDirection {
   return value === "asc" ? "asc" : "desc";
 }
 
-export function parseTableListParams(
+export function parseTableListParams<TSort extends string>(
   input: Record<string, string | string[] | undefined>,
-  defaultSort: string,
-  allowedSorts: readonly string[]
-): TableListParams {
+  defaultSort: TSort,
+  allowedSorts: readonly TSort[]
+): TableListParams<TSort> {
   const sortCandidate = firstSearchParam(input.sort) ?? defaultSort;
-  const sort = allowedSorts.includes(sortCandidate) ? sortCandidate : defaultSort;
+  const sort = allowedSorts.includes(sortCandidate as TSort) ? (sortCandidate as TSort) : defaultSort;
 
   return {
     page: parsePageParam(firstSearchParam(input.page)),

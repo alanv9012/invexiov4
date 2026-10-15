@@ -2,8 +2,8 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { initialUpdateProfileState, updateProfileAction } from "@/features/settings/actions";
-import type { SettingsProfile } from "@/features/settings/types";
+import { updateProfileAction } from "@/features/settings/actions";
+import { initialUpdateProfileState, type SettingsProfile } from "@/features/settings/types";
 import { ActionFeedback } from "@/components/ui/action-feedback";
 import { Button } from "@/components/ui/button";
 import { FormField, Input } from "@/components/ui/input";

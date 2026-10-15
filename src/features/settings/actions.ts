@@ -7,16 +7,6 @@ import { getWooEnvStatus } from "@/server/woocommerce/env";
 import type { UpdateProfileState, WooTestConnectionState } from "@/features/settings/types";
 import { createWooCommerceClient } from "@/server/woocommerce/client";
 
-export const initialWooTestState: WooTestConnectionState = {
-  status: "idle",
-  message: null
-};
-
-export const initialUpdateProfileState: UpdateProfileState = {
-  status: "idle",
-  message: null
-};
-
 const updateProfileSchema = z.object({
   fullName: z.string().trim().min(2, "Name must be at least 2 characters.")
 });
