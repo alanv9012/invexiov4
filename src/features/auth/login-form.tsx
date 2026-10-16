@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { loginAction } from "@/features/auth/actions";
@@ -52,13 +51,7 @@ export function LoginForm() {
       </form>
 
       <p className="mt-4 text-body-sm text-muted-foreground">
-        No account yet?{" "}
-        <Link
-          href="/signup"
-          className="font-medium text-foreground underline underline-offset-2 transition-colors hover:text-primary"
-        >
-          Sign up
-        </Link>
+        Accounts are invitation-only. Contact the owner if you need access.
       </p>
     </>
   );

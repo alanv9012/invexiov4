@@ -66,7 +66,10 @@ export async function updateProfileAction(
 
   const { error } = await supabase
     .from("profiles")
-    .upsert({ id: user.id, full_name: parsed.data.fullName });
+    .update({ full_name: parsed.data.fullName })
+    .eq("id", user.id)
+    .select("id")
+    .single();
 
   if (error) {
     return { status: "error", message: "Could not update profile. Please try again." };
