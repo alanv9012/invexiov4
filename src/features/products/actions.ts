@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { AdjustStockFormState } from "@/features/products/adjust-stock-state";
-import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { authorizePrivilegedPermission } from "@/server/auth/authorization";
 import { getSupabaseAdminClient } from "@/server/supabase/admin";
 import { createWooCommerceClient } from "@/server/woocommerce/client";
 
@@ -40,18 +40,24 @@ export async function adjustStockAction(
     };
   }
 
-  const supabase = await getSupabaseServerClient();
-  const admin = getSupabaseAdminClient();
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
+  const authorization = await authorizePrivilegedPermission("inventory.adjust");
+
+  if (!authorization.authorized) {
+    return {
+      status: "error",
+      message: "You do not have permission to adjust inventory."
+    };
+  }
+
+  const { supabase, user } = authorization;
+  const admin = getSupabaseAdminClient(authorization);
 
   const { data: movement, error } = await supabase.rpc("record_inventory_movement", {
     p_product_id: parsed.data.productId,
     p_change_quantity: parsed.data.adjustmentAmount,
     p_reason: buildReason(parsed.data.reason, parsed.data.notes),
     p_source: "manual",
-    p_user_id: user?.id ?? null,
+    p_user_id: user.id,
     p_reference_type: "manual_adjustment",
     p_reference_id: null
   });
@@ -95,7 +101,7 @@ export async function adjustStockAction(
   }
 
   try {
-    const woo = createWooCommerceClient();
+    const woo = createWooCommerceClient(authorization);
     await woo.updateProductStock(wooProductId, newQuantity);
 
     await admin.from("sync_logs").insert({

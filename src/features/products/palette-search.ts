@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { authorizePermission } from "@/server/auth/authorization";
 
 export type PaletteProduct = {
   id: string;
@@ -23,7 +23,13 @@ export async function searchProductsForPalette(query: string): Promise<{
   }
 
   try {
-    const supabase = await getSupabaseServerClient();
+    const authorization = await authorizePermission("products.read");
+
+    if (!authorization.authorized) {
+      return { products: [], errorMessage: "You do not have permission to search products." };
+    }
+
+    const { supabase } = authorization;
     const { data, error } = await supabase
       .from("products")
       .select("id, name, sku, stock_quantity")

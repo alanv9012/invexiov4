@@ -28,6 +28,7 @@ type ProductsTableProps = {
   sort: ProductSortKey;
   sortDir: SortDirection;
   baseParams: Record<string, string | undefined>;
+  canAdjustInventory: boolean;
 };
 
 export function ProductsTable({
@@ -37,7 +38,8 @@ export function ProductsTable({
   pageSize,
   sort,
   sortDir,
-  baseParams
+  baseParams,
+  canAdjustInventory
 }: ProductsTableProps) {
   const pagination = (
     <TablePagination
@@ -93,13 +95,15 @@ export function ProductsTable({
               >
                 View
               </Button>
-              <div className="w-full sm:flex-1 [&_button]:w-full">
-                <InventoryAdjustmentDrawer
-                  productId={product.id}
-                  productName={product.name}
-                  currentStock={product.stockQuantity}
-                />
-              </div>
+              {canAdjustInventory ? (
+                <div className="w-full sm:flex-1 [&_button]:w-full">
+                  <InventoryAdjustmentDrawer
+                    productId={product.id}
+                    productName={product.name}
+                    currentStock={product.stockQuantity}
+                  />
+                </div>
+              ) : null}
             </div>
           </Card>
         ))}
@@ -195,11 +199,13 @@ export function ProductsTable({
                       <Button href={`/products?q=${encodeURIComponent(product.sku)}`} variant="ghost" size="sm">
                         View
                       </Button>
-                      <InventoryAdjustmentDrawer
-                        productId={product.id}
-                        productName={product.name}
-                        currentStock={product.stockQuantity}
-                      />
+                      {canAdjustInventory ? (
+                        <InventoryAdjustmentDrawer
+                          productId={product.id}
+                          productName={product.name}
+                          currentStock={product.stockQuantity}
+                        />
+                      ) : null}
                     </div>
                   </TableActionsCell>
                 </TableRow>

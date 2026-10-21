@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { CreateManualOrderState } from "@/features/orders/create-manual-order-state";
-import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { authorizePermission } from "@/server/auth/authorization";
 
 const lineItemSchema = z.object({
   productId: z.string().uuid(),
@@ -38,6 +38,17 @@ type SupabaseErrorShape = {
   details?: string;
   hint?: string;
 };
+
+// A transport/PostgREST failure does not prove the database transaction failed.
+// Recognize only transaction-aborting errors; connection/completion-unknown
+// SQLSTATEs (such as 08007/40003) must retain recovery information.
+function isConfirmedDatabaseFailure(error: unknown): boolean {
+  const code = (error as SupabaseErrorShape | null)?.code;
+  return typeof code === "string" && [
+    "42501", "P0001", "23502", "23503", "23505", "23514",
+    "22003", "22P02", "40001", "40P01", "57014"
+  ].includes(code);
+}
 
 function logManualOrderFailure(
   step: ManualOrderFailureStep,
@@ -77,6 +88,7 @@ export async function createManualOrderAction(
   _previous: CreateManualOrderState,
   formData: FormData
 ): Promise<CreateManualOrderState> {
+  let recoveryReference: string | null = null;
   try {
     const parsed = createManualOrderSchema.safeParse({
       customerName: formData.get("customerName"),
@@ -122,32 +134,17 @@ export async function createManualOrderAction(
       quantity
     }));
 
-    const supabase = await getSupabaseServerClient();
-    const {
-      data: { user },
-      error: authError
-    } = await supabase.auth.getUser();
+    const authorization = await authorizePermission("orders.create_manual");
 
-    if (authError) {
-      logManualOrderFailure("authentication", authError);
+    if (!authorization.authorized) {
+      logManualOrderFailure("authentication", new Error(authorization.reason));
       return {
         status: "error",
-        message: uiMessageForFailure(
-          "authentication",
-          authError,
-          "Authentication failed. Sign in again and retry."
-        )
+        message: "You do not have permission to create manual orders."
       };
     }
 
-    if (!user) {
-      logManualOrderFailure("authentication", new Error("No authenticated user in session"));
-      return {
-        status: "error",
-        message: "Authentication failed. You must be signed in to create an order."
-      };
-    }
-
+    const { supabase, user } = authorization;
     const productIds = lineItems.map((item) => item.productId);
     const { data: products, error: productsError } = await supabase
       .from("products")
@@ -200,6 +197,7 @@ export async function createManualOrderAction(
     }
 
     const orderNumber = generateOrderNumber();
+    recoveryReference = orderNumber;
 
     const { data: order, error: orderError } = await supabase
       .from("orders")
@@ -223,11 +221,9 @@ export async function createManualOrderAction(
       logManualOrderFailure("order_insert", orderError, { orderNumber, totalAmount });
       return {
         status: "error",
-        message: uiMessageForFailure(
-          "order_insert",
-          orderError,
-          "Order insert failed. The order was not created."
-        )
+        message: isConfirmedDatabaseFailure(orderError)
+          ? uiMessageForFailure("order_insert", orderError, "Order insert failed. The order was not created.")
+          : `Order ${orderNumber} creation could not be confirmed. Do not retry the sale; ask the Owner to reconcile it.`
       };
     }
 
@@ -237,9 +233,30 @@ export async function createManualOrderAction(
       });
       return {
         status: "error",
-        message: "Order insert failed. No order record was returned."
+        message: `Order ${orderNumber} creation could not be confirmed. Do not retry the sale; ask the Owner to reconcile it.`
       };
     }
+
+    recoveryReference = `${orderNumber} (${order.id})`;
+
+    // RLS can silently delete zero rows. Require a returned row before reporting
+    // cleanup success; the A2 trigger additionally refuses unbalanced stock.
+    const deleteOrderForRecovery = async (): Promise<boolean> => {
+      const { data: deleted, error: deleteError } = await supabase
+        .from("orders")
+        .delete()
+        .eq("id", order.id)
+        .select("id")
+        .maybeSingle();
+      if (deleteError || !deleted) {
+        logManualOrderFailure("inventory_movement", deleteError ?? new Error("Order cleanup deleted no rows"), {
+          orderId: order.id, phase: "cleanup"
+        });
+        return false;
+      }
+      return true;
+    };
+    const recoveryMessage = `Recovery required for order ${recoveryReference}. Stock or cleanup could not be confirmed. Do not retry the sale; ask the Owner to reconcile this order.`;
 
     const orderItemsPayload = lineItems.map((item) => {
       const product = productMap.get(item.productId)!;
@@ -262,10 +279,10 @@ export async function createManualOrderAction(
         orderId: order.id,
         itemCount: orderItemsPayload.length
       });
-      await supabase.from("orders").delete().eq("id", order.id);
+      const cleanedUp = await deleteOrderForRecovery();
       return {
         status: "error",
-        message: uiMessageForFailure(
+        message: !cleanedUp ? recoveryMessage : uiMessageForFailure(
           "order_items_insert",
           itemsError,
           "Order items insert failed. The order was rolled back."
@@ -295,6 +312,7 @@ export async function createManualOrderAction(
           quantity: item.quantity
         });
 
+        let compensationFailed = false;
         for (const reversed of reversedMovements) {
           const { error: rollbackError } = await supabase.rpc("record_inventory_movement", {
             p_product_id: reversed.productId,
@@ -307,6 +325,7 @@ export async function createManualOrderAction(
           });
 
           if (rollbackError) {
+            compensationFailed = true;
             logManualOrderFailure("inventory_movement", rollbackError, {
               orderId: order.id,
               productId: reversed.productId,
@@ -315,11 +334,16 @@ export async function createManualOrderAction(
           }
         }
 
-        await supabase.from("orders").delete().eq("id", order.id);
+        // A failed RPC response may hide a committed deduction. The locked
+        // database cleanup guard is authoritative, including for that item.
+        // Preserve the order if any compensation result is uncertain.
+        const cleanedUp = !compensationFailed
+          && isConfirmedDatabaseFailure(movementError)
+          && await deleteOrderForRecovery();
 
         return {
           status: "error",
-          message: uiMessageForFailure(
+          message: !cleanedUp ? recoveryMessage : uiMessageForFailure(
             "inventory_movement",
             movementError,
             `Inventory movement failed for ${product.name}. The order was rolled back.`
@@ -346,7 +370,9 @@ export async function createManualOrderAction(
     logManualOrderFailure("order_insert", error, { phase: "unexpected" });
     return {
       status: "error",
-      message: "An unexpected error occurred while creating the order. Check server logs for details."
+      message: recoveryReference
+        ? `Order ${recoveryReference} may be partially saved. Do not retry the sale; ask the Owner to reconcile it. Check server logs for recovery details.`
+        : "An unexpected error occurred before submitting the order. Check server logs for details."
     };
   }
 }

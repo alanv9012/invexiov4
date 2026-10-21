@@ -9,6 +9,7 @@ import { cn } from "@/lib/ui/cn";
 
 type ActivityFeedProps = {
   items: DashboardActivityItem[];
+  canRunSync: boolean;
 };
 
 function ActivityIcon({ type }: { type: DashboardActivityItem["type"] }) {
@@ -27,7 +28,7 @@ function ActivityIcon({ type }: { type: DashboardActivityItem["type"] }) {
   );
 }
 
-export function ActivityFeed({ items }: ActivityFeedProps) {
+export function ActivityFeed({ items, canRunSync }: ActivityFeedProps) {
   return (
     <Card padding="md">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -53,9 +54,11 @@ export function ActivityFeed({ items }: ActivityFeedProps) {
             description="Orders and stock adjustments will appear here as your team uses Invexio."
             action={
               <div className="flex flex-wrap justify-center gap-2">
-                <Button href="/sync" size="sm">
-                  Run sync
-                </Button>
+                {canRunSync ? (
+                  <Button href="/sync" size="sm">
+                    Run sync
+                  </Button>
+                ) : null}
                 <Button href="/orders" variant="secondary" size="sm">
                   View orders
                 </Button>

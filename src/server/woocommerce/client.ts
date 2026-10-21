@@ -1,5 +1,10 @@
 import "server-only";
 
+import {
+  isPrivilegedAuthorization,
+  type PrivilegedAuthorization
+} from "@/server/auth/authorization";
+
 type WooProduct = {
   id: number;
   name: string;
@@ -179,6 +184,12 @@ export class WooCommerceClient {
   }
 }
 
-export function createWooCommerceClient(): WooCommerceClient {
+export function createWooCommerceClient(
+  authorization: PrivilegedAuthorization
+): WooCommerceClient {
+  if (!isPrivilegedAuthorization(authorization)) {
+    throw new Error("Privileged authorization is required for WooCommerce access.");
+  }
+
   return new WooCommerceClient();
 }

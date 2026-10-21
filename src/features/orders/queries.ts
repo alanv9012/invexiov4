@@ -2,7 +2,7 @@ import "server-only";
 
 import { firstSearchParam } from "@/lib/search-params";
 import { getPaginationMeta, parseTableListParams } from "@/lib/ui/table-params";
-import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { authorizePermission } from "@/server/auth/authorization";
 import {
   ORDER_SORT_KEYS,
   type OrderRow,
@@ -105,7 +105,13 @@ export async function getOrders(
   };
 
   try {
-    const supabase = await getSupabaseServerClient();
+    const authorization = await authorizePermission("orders.read");
+
+    if (!authorization.authorized) {
+      return { ...empty, errorMessage: "You do not have permission to view orders." };
+    }
+
+    const { supabase } = authorization;
     const rangeFrom = (filters.page - 1) * filters.pageSize;
     const rangeTo = rangeFrom + filters.pageSize - 1;
 
@@ -174,7 +180,16 @@ export async function getProductsForOrderForm(): Promise<{
   errorMessage: string | null;
 }> {
   try {
-    const supabase = await getSupabaseServerClient();
+    const authorization = await authorizePermission("orders.create_manual");
+
+    if (!authorization.authorized) {
+      return {
+        products: [],
+        errorMessage: "You do not have permission to create manual orders."
+      };
+    }
+
+    const { supabase } = authorization;
     const { data, error } = await supabase
       .from("products")
       .select("id, name, sku, price, stock_quantity")

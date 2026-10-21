@@ -40,14 +40,23 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
   } = await supabase.auth.getUser();
 
   const isAuthRoute = publicRoutes.has(request.nextUrl.pathname);
+  let hasActiveProfile = false;
 
-  if (!user && !isAuthRoute) {
+  if (user) {
+    const { data, error } = await supabase.rpc("is_active_user");
+    hasActiveProfile = !error && data === true;
+  }
+
+  if ((!user || !hasActiveProfile) && !isAuthRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    if (user && !hasActiveProfile) {
+      url.searchParams.set("message", "Account access is inactive. Contact the owner.");
+    }
     return NextResponse.redirect(url);
   }
 
-  if (user && isAuthRoute) {
+  if (user && hasActiveProfile && isAuthRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);

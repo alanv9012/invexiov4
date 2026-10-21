@@ -17,9 +17,10 @@ export type SettingsWooConnection = {
 } | null;
 
 export type SettingsPageData = {
-  wooEnv: WooEnvStatus;
+  wooEnv: WooEnvStatus | null;
   profile: SettingsProfile | null;
   wooConnection: SettingsWooConnection;
+  canManageIntegrations: boolean;
   errorMessage: string | null;
 };
 

@@ -15,8 +15,11 @@ import type {
   DashboardRecentOrder,
   DashboardSyncSummaryItem
 } from "@/features/dashboard/types";
-import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { stockThresholds } from "@/lib/ui/tokens";
+import {
+  authorizePermission,
+  contextHasPermission
+} from "@/server/auth/authorization";
 
 function startOfUtcDay(): string {
   const now = new Date();
@@ -85,6 +88,8 @@ function buildActivityFeed(
 export async function getDashboardData(): Promise<DashboardData> {
   const emptyTrend = computeTrend(0, 0, "vs prior week");
   const empty: DashboardData = {
+    canViewInventoryMovements: false,
+    canRunSync: false,
     totalProducts: 0,
     lowStockProducts: 0,
     recentOrdersCount: 0,
@@ -106,7 +111,17 @@ export async function getDashboardData(): Promise<DashboardData> {
   };
 
   try {
-    const supabase = await getSupabaseServerClient();
+    const authorization = await authorizePermission("products.read");
+
+    if (!authorization.authorized) {
+      return { ...empty, errorMessage: "You do not have permission to view the dashboard." };
+    }
+
+    const { supabase } = authorization;
+    const [canViewInventoryMovements, canRunSync] = await Promise.all([
+      contextHasPermission(authorization, "inventory_movements.read"),
+      contextHasPermission(authorization, "sync.run")
+    ]);
     const todayStart = startOfUtcDay();
     const chartStart = fourteenDaysAgo();
 
@@ -134,34 +149,44 @@ export async function getDashboardData(): Promise<DashboardData> {
         .from("orders")
         .select("*", { count: "exact", head: true })
         .gte("ordered_at", sevenDaysAgo()),
-      supabase
-        .from("sync_logs")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "failed"),
-      supabase
-        .from("inventory_movements")
-        .select("*", { count: "exact", head: true })
-        .gte("created_at", todayStart),
+      canRunSync
+        ? supabase
+            .from("sync_logs")
+            .select("*", { count: "exact", head: true })
+            .eq("status", "failed")
+        : Promise.resolve({ data: [], error: null, count: 0 }),
+      canViewInventoryMovements
+        ? supabase
+            .from("inventory_movements")
+            .select("*", { count: "exact", head: true })
+            .gte("created_at", todayStart)
+        : Promise.resolve({ data: [], error: null, count: 0 }),
       supabase
         .from("orders")
         .select("id, order_number, customer_name, status, total_amount, ordered_at")
         .order("ordered_at", { ascending: false })
         .limit(12),
-      supabase
-        .from("inventory_movements")
-        .select("id, change_quantity, reason, source, created_at, products(name)")
-        .order("created_at", { ascending: false })
-        .limit(12),
-      supabase
-        .from("sync_logs")
-        .select("type, status")
-        .order("created_at", { ascending: false })
-        .limit(100),
+      canViewInventoryMovements
+        ? supabase
+            .from("inventory_movements")
+            .select("id, change_quantity, reason, source, created_at, products(name)")
+            .order("created_at", { ascending: false })
+            .limit(12)
+        : Promise.resolve({ data: [], error: null, count: 0 }),
+      canRunSync
+        ? supabase
+            .from("sync_logs")
+            .select("type, status")
+            .order("created_at", { ascending: false })
+            .limit(100)
+        : Promise.resolve({ data: [], error: null, count: 0 }),
       supabase.from("orders").select("ordered_at").gte("ordered_at", chartStart),
-      supabase
-        .from("inventory_movements")
-        .select("created_at, change_quantity")
-        .gte("created_at", chartStart),
+      canViewInventoryMovements
+        ? supabase
+            .from("inventory_movements")
+            .select("created_at, change_quantity")
+            .gte("created_at", chartStart)
+        : Promise.resolve({ data: [], error: null, count: 0 }),
       supabase
         .from("products")
         .select("id, name, sku, stock_quantity")
@@ -169,11 +194,13 @@ export async function getDashboardData(): Promise<DashboardData> {
         .lte("stock_quantity", stockThresholds.lowStockMax)
         .order("stock_quantity", { ascending: true })
         .limit(8),
-      supabase
-        .from("inventory_movements")
-        .select("*", { count: "exact", head: true })
-        .gte("created_at", fourteenDaysAgo())
-        .lt("created_at", sevenDaysAgo())
+      canViewInventoryMovements
+        ? supabase
+            .from("inventory_movements")
+            .select("*", { count: "exact", head: true })
+            .gte("created_at", fourteenDaysAgo())
+            .lt("created_at", sevenDaysAgo())
+        : Promise.resolve({ data: [], error: null, count: 0 })
     ]);
 
     const queryError =
@@ -244,6 +271,8 @@ export async function getDashboardData(): Promise<DashboardData> {
     );
 
     return {
+      canViewInventoryMovements,
+      canRunSync,
       totalProducts: totalProductsResult.count ?? 0,
       lowStockProducts: lowStockResult.count ?? 0,
       recentOrdersCount: recentOrdersCountResult.count ?? 0,
@@ -255,7 +284,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       orderVolumeByDay,
       movementActivityByDay,
       lowStockItems,
-      activityFeed: buildActivityFeed(recentOrders, recentMovements),
+      activityFeed: buildActivityFeed(recentOrders, canViewInventoryMovements ? recentMovements : []),
       metricTrends: {
         orders: computeTrend(orderSplit.recent, orderSplit.prior, "vs prior week"),
         movements: computeTrend(movementsThisWeek, movementsPriorWeekTotal, "vs prior week"),

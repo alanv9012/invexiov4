@@ -2,40 +2,49 @@ import "server-only";
 
 import { getWooEnvStatus } from "@/server/woocommerce/env";
 import type { SettingsPageData } from "@/features/settings/types";
-import { getSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  authorizePermission,
+  contextHasPermission
+} from "@/server/auth/authorization";
 
 export async function getSettingsPageData(): Promise<SettingsPageData> {
-  const wooEnv = getWooEnvStatus();
-
   try {
-    const supabase = await getSupabaseServerClient();
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
+    const authorization = await authorizePermission("profile.update_self");
 
-    if (!user) {
+    if (!authorization.authorized) {
       return {
-        wooEnv,
+        wooEnv: null,
         profile: null,
         wooConnection: null,
-        errorMessage: "You must be signed in to view settings."
+        canManageIntegrations: false,
+        errorMessage: "You do not have permission to view settings."
       };
     }
 
-    const [{ data: profile }, { data: connections }] = await Promise.all([
-      supabase.from("profiles").select("id, full_name, role").eq("id", user.id).maybeSingle(),
-      supabase
+    const { supabase, user } = authorization;
+    const canManageIntegrations = await contextHasPermission(
+      authorization,
+      "integrations.manage"
+    );
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id, full_name, role")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    const connectionsResult = canManageIntegrations
+      ? await supabase
         .from("woo_connections")
         .select("id, name, store_url, is_active, last_successful_sync_at, last_error_message")
         .eq("is_active", true)
         .order("updated_at", { ascending: false })
         .limit(1)
-    ]);
+      : { data: null };
 
-    const connection = connections?.[0] ?? null;
+    const connection = connectionsResult.data?.[0] ?? null;
 
     return {
-      wooEnv,
+      wooEnv: canManageIntegrations ? getWooEnvStatus() : null,
       profile: {
         id: user.id,
         email: user.email ?? "",
@@ -52,13 +61,15 @@ export async function getSettingsPageData(): Promise<SettingsPageData> {
             lastErrorMessage: connection.last_error_message
           }
         : null,
+      canManageIntegrations,
       errorMessage: null
     };
   } catch {
     return {
-      wooEnv,
+      wooEnv: null,
       profile: null,
       wooConnection: null,
+      canManageIntegrations: false,
       errorMessage: "Unable to load settings right now."
     };
   }

@@ -29,26 +29,30 @@ export function DashboardMetrics({ data }: DashboardMetricsProps) {
         trend={data.metricTrends.orders}
         sparkline={orderSparkline}
       />
-      <MetricCard
-        label="Failed syncs"
-        value={data.failedSyncs}
-        tone={data.failedSyncs > 0 ? "danger" : "neutral"}
-        hint="All-time failed jobs"
-        trendPositiveIsGood={false}
-        trend={{
-          percentChange: null,
-          direction: data.failedSyncs > 0 ? "up" : "flat",
-          label: data.failedSyncs > 0 ? "Needs attention" : "Healthy"
-        }}
-      />
-      <MetricCard
-        label="Movements today"
-        value={data.movementsToday}
-        hint="UTC calendar day"
-        tone={data.movementsToday > 0 ? "success" : "neutral"}
-        trend={data.metricTrends.movements}
-        sparkline={movementSparkline}
-      />
+      {data.canRunSync ? (
+        <MetricCard
+          label="Failed syncs"
+          value={data.failedSyncs}
+          tone={data.failedSyncs > 0 ? "danger" : "neutral"}
+          hint="All-time failed jobs"
+          trendPositiveIsGood={false}
+          trend={{
+            percentChange: null,
+            direction: data.failedSyncs > 0 ? "up" : "flat",
+            label: data.failedSyncs > 0 ? "Needs attention" : "Healthy"
+          }}
+        />
+      ) : null}
+      {data.canViewInventoryMovements ? (
+        <MetricCard
+          label="Movements today"
+          value={data.movementsToday}
+          hint="UTC calendar day"
+          tone={data.movementsToday > 0 ? "success" : "neutral"}
+          trend={data.metricTrends.movements}
+          sparkline={movementSparkline}
+        />
+      ) : null}
     </section>
   );
 }

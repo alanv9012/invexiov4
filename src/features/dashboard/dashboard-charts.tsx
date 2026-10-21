@@ -47,20 +47,22 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
         </div>
       </Card>
 
-      <Card padding="md" className="lg:col-span-1">
-        <CardTitle>Inventory movement activity</CardTitle>
-        <CardDescription>
-          {totalMovementEvents} adjustments · net {netStockChange >= 0 ? "+" : ""}
-          {netStockChange} units ({DASHBOARD_CHART_DAYS}d)
-        </CardDescription>
-        <div className="mt-4">
-          <BarChart
-            data={movementBars}
-            barClassName="fill-success/80"
-            emptyMessage="No inventory movements yet. Adjust stock from Products to populate this chart."
-          />
-        </div>
-      </Card>
+      {data.canViewInventoryMovements ? (
+        <Card padding="md" className="lg:col-span-1">
+          <CardTitle>Inventory movement activity</CardTitle>
+          <CardDescription>
+            {totalMovementEvents} adjustments · net {netStockChange >= 0 ? "+" : ""}
+            {netStockChange} units ({DASHBOARD_CHART_DAYS}d)
+          </CardDescription>
+          <div className="mt-4">
+            <BarChart
+              data={movementBars}
+              barClassName="fill-success/80"
+              emptyMessage="No inventory movements yet. Adjust stock from Products to populate this chart."
+            />
+          </div>
+        </Card>
+      ) : null}
 
       <Card padding="md" className="lg:col-span-1">
         <CardTitle>Low stock products</CardTitle>

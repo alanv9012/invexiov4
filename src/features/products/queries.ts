@@ -3,7 +3,7 @@ import "server-only";
 import { z } from "zod";
 import { firstSearchParam } from "@/lib/search-params";
 import { getPaginationMeta, parseTableListParams } from "@/lib/ui/table-params";
-import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { authorizePermission } from "@/server/auth/authorization";
 import {
   PRODUCT_SORT_KEYS,
   type ProductItem,
@@ -89,7 +89,13 @@ export async function getProducts(
   };
 
   try {
-    const supabase = await getSupabaseServerClient();
+    const authorization = await authorizePermission("products.read");
+
+    if (!authorization.authorized) {
+      return { ...empty, errorMessage: "You do not have permission to view products." };
+    }
+
+    const { supabase } = authorization;
     const rangeFrom = (filters.page - 1) * filters.pageSize;
     const rangeTo = rangeFrom + filters.pageSize - 1;
 

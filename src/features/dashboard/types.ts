@@ -58,6 +58,8 @@ export type DashboardMetricTrends = {
 };
 
 export type DashboardData = {
+  canViewInventoryMovements: boolean;
+  canRunSync: boolean;
   totalProducts: number;
   lowStockProducts: number;
   recentOrdersCount: number;

@@ -7,6 +7,7 @@ import {
   completeSyncLogSuccess,
   startSyncLog
 } from "@/features/sync/sync-log-helpers";
+import { authorizePrivilegedPermission } from "@/server/auth/authorization";
 import { getSupabaseAdminClient } from "@/server/supabase/admin";
 import { createWooCommerceClient, type WooOrder } from "@/server/woocommerce/client";
 import { getWooEnvStatus } from "@/server/woocommerce/env";
@@ -42,6 +43,17 @@ export async function syncProductsFromWooCommerceAction(
   _previous: SyncProductsState,
   _formData: FormData
 ): Promise<SyncProductsState> {
+  void _previous;
+  void _formData;
+  const authorization = await authorizePrivilegedPermission("sync.run");
+
+  if (!authorization.authorized) {
+    return {
+      status: "error",
+      message: "You do not have permission to run synchronization."
+    };
+  }
+
   if (!getWooEnvStatus().allConfigured) {
     return {
       status: "error",
@@ -49,7 +61,7 @@ export async function syncProductsFromWooCommerceAction(
     };
   }
 
-  const supabase = getSupabaseAdminClient();
+  const supabase = getSupabaseAdminClient(authorization);
   const { syncLogId, syncStart } = await startSyncLog(
     supabase,
     "products",
@@ -57,7 +69,7 @@ export async function syncProductsFromWooCommerceAction(
   );
 
   try {
-    const woo = createWooCommerceClient();
+    const woo = createWooCommerceClient(authorization);
     const fetchedProducts: WooProductRecord[] = [];
     const perPage = 100;
 
@@ -258,6 +270,17 @@ export async function syncOrdersFromWooCommerceAction(
   _previous: SyncOrdersState,
   _formData: FormData
 ): Promise<SyncOrdersState> {
+  void _previous;
+  void _formData;
+  const authorization = await authorizePrivilegedPermission("sync.run");
+
+  if (!authorization.authorized) {
+    return {
+      status: "error",
+      message: "You do not have permission to run synchronization."
+    };
+  }
+
   if (!getWooEnvStatus().allConfigured) {
     return {
       status: "error",
@@ -265,7 +288,7 @@ export async function syncOrdersFromWooCommerceAction(
     };
   }
 
-  const supabase = getSupabaseAdminClient();
+  const supabase = getSupabaseAdminClient(authorization);
   const { syncLogId, syncStart } = await startSyncLog(
     supabase,
     "orders",
@@ -273,7 +296,7 @@ export async function syncOrdersFromWooCommerceAction(
   );
 
   try {
-    const woo = createWooCommerceClient();
+    const woo = createWooCommerceClient(authorization);
     const fetchedOrders: WooOrder[] = [];
     const perPage = 50;
 

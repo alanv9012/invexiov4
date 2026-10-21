@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { OrdersSyncCard } from "@/features/sync/orders-sync-card";
 import { ProductsSyncCard } from "@/features/sync/products-sync-card";
@@ -6,8 +7,12 @@ import { SyncWooNotConfiguredAlert } from "@/features/sync/sync-woo-not-configur
 import { PageContent } from "@/components/ui/page-content";
 import { SectionHeader } from "@/components/ui/section-header";
 
-export default function SyncPage() {
-  const { wooConfigured } = getSyncPageData();
+export default async function SyncPage() {
+  const { authorized, wooConfigured } = await getSyncPageData();
+
+  if (!authorized) {
+    redirect("/");
+  }
 
   return (
     <DashboardLayout>

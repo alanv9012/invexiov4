@@ -35,9 +35,11 @@ export function DashboardContent({ data }: DashboardContentProps) {
         title="Dashboard"
         description="Analytics and live activity from your Supabase inventory and order data."
         action={
-          <Button href="/sync" variant="secondary" size="sm">
-            Open sync
-          </Button>
+          data.canRunSync ? (
+            <Button href="/sync" variant="secondary" size="sm">
+              Open sync
+            </Button>
+          ) : undefined
         }
       />
 
@@ -47,7 +49,7 @@ export function DashboardContent({ data }: DashboardContentProps) {
           description="Connect WooCommerce, sync products, and start tracking inventory to populate your dashboard."
           action={
             <div className="flex flex-wrap justify-center gap-2">
-              <Button href="/sync">Configure sync</Button>
+              {data.canRunSync ? <Button href="/sync">Configure sync</Button> : null}
               <Button href="/products" variant="secondary">
                 View products
               </Button>
@@ -58,33 +60,39 @@ export function DashboardContent({ data }: DashboardContentProps) {
 
       <DashboardMetrics data={data} />
       <DashboardCharts data={data} />
-      <ActivityFeed items={data.activityFeed} />
+      <ActivityFeed items={data.activityFeed} canRunSync={data.canRunSync} />
 
-      <Card padding="md">
-        <CardTitle>Sync status summary</CardTitle>
-        <CardDescription>Counts from the 100 most recent sync log entries.</CardDescription>
-        {data.syncSummary.length === 0 ? (
-          <div className="mt-4">
-            <EmptyState
-              variant="inline"
-              title="No sync activity"
-              description="Run a product or order sync to see status breakdowns here."
-              action={<Button href="/sync" size="sm">Go to sync</Button>}
-            />
-          </div>
-        ) : (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {data.syncSummary.map((item) => (
-              <SyncLogStatusBadge
-                key={`${item.type}-${item.status}`}
-                type={item.type}
-                status={item.status}
-                count={item.count}
+      {data.canRunSync ? (
+        <Card padding="md">
+          <CardTitle>Sync status summary</CardTitle>
+          <CardDescription>Counts from the 100 most recent sync log entries.</CardDescription>
+          {data.syncSummary.length === 0 ? (
+            <div className="mt-4">
+              <EmptyState
+                variant="inline"
+                title="No sync activity"
+                description="Run a product or order sync to see status breakdowns here."
+                action={
+                  <Button href="/sync" size="sm">
+                    Go to sync
+                  </Button>
+                }
               />
-            ))}
-          </div>
-        )}
-      </Card>
+            </div>
+          ) : (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {data.syncSummary.map((item) => (
+                <SyncLogStatusBadge
+                  key={`${item.type}-${item.status}`}
+                  type={item.type}
+                  status={item.status}
+                  count={item.count}
+                />
+              ))}
+            </div>
+          )}
+        </Card>
+      ) : null}
     </div>
   );
 }

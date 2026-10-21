@@ -6,6 +6,7 @@ import { getProducts, parseProductsSearchParams } from "@/features/products/quer
 import { ProductsTable } from "@/features/products/products-table";
 import type { ProductsSearchParams } from "@/features/products/types";
 import { buildProductsListParams } from "@/lib/ui/list-params";
+import { currentUserHasPermission } from "@/server/auth/authorization";
 
 type ProductsPageProps = {
   searchParams?: Promise<ProductsSearchParams>;
@@ -14,7 +15,10 @@ type ProductsPageProps = {
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
   const resolvedSearchParams = (searchParams ? await searchParams : {}) as ProductsSearchParams;
   const filters = parseProductsSearchParams(resolvedSearchParams);
-  const result = await getProducts(filters);
+  const [result, canAdjustInventory] = await Promise.all([
+    getProducts(filters),
+    currentUserHasPermission("inventory.adjust")
+  ]);
   const baseParams = buildProductsListParams(filters);
 
   return (
@@ -38,6 +42,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             sort={result.sort}
             sortDir={result.sortDir}
             baseParams={baseParams}
+            canAdjustInventory={canAdjustInventory}
           />
         ) : null}
       </PageContent>
