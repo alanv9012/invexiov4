@@ -25,7 +25,7 @@ export function useKeyboardShortcut(
     if (!enabled) return;
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() !== key.toLowerCase()) return;
+      if (typeof event.key !== "string" || event.key.toLowerCase() !== key.toLowerCase()) return;
       if (metaOrCtrl && !(event.metaKey || event.ctrlKey)) return;
       if (shift && !event.shiftKey) return;
       if (!shift && event.shiftKey && metaOrCtrl) return;
