@@ -1,7 +1,15 @@
 import { LoginForm } from "@/features/auth/login-form";
+import { getLoginAccessMessage } from "@/features/auth/login-access-message";
 import { Card } from "@/components/ui/card";
 
-export default function LoginPage() {
+type LoginPageProps = {
+  searchParams?: Promise<{ access?: string | string[] }>;
+};
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const resolvedSearchParams = searchParams ? await searchParams : {};
+  const accessMessage = getLoginAccessMessage(resolvedSearchParams.access);
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card padding="lg" className="w-full max-w-md animate-page-enter shadow-card">
@@ -11,7 +19,7 @@ export default function LoginPage() {
           <p className="mt-1 text-body-sm text-muted-foreground">Access your inventory dashboard.</p>
         </div>
 
-        <LoginForm />
+        <LoginForm accessMessage={accessMessage} />
       </Card>
     </main>
   );

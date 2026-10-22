@@ -3,15 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/components/ui/toast/toast-context";
-
-function decodeMessage(value: string | null): string | null {
-  if (!value) return null;
-  try {
-    return decodeURIComponent(value.replace(/\+/g, " "));
-  } catch {
-    return value;
-  }
-}
+import { getAllowedUrlToast } from "@/components/ui/toast/url-toast-message";
 
 export function UrlToastListener() {
   const searchParams = useSearchParams();
@@ -23,6 +15,7 @@ export function UrlToastListener() {
   useEffect(() => {
     const error = searchParams.get("error");
     const message = searchParams.get("message");
+    const allowedToast = getAllowedUrlToast(error, message);
     const key = `${pathname}:${error ?? ""}:${message ?? ""}`;
 
     if (!error && !message) {
@@ -33,13 +26,13 @@ export function UrlToastListener() {
     if (handledKey.current === key) return;
     handledKey.current = key;
 
-    if (error) {
+    if (allowedToast?.variant === "error") {
       toast.error({
-        message: decodeMessage(error) ?? "Something went wrong. Please try again."
+        message: allowedToast.message
       });
-    } else if (message) {
+    } else if (allowedToast?.variant === "success") {
       toast.success({
-        message: decodeMessage(message) ?? "Completed successfully."
+        message: allowedToast.message
       });
     }
 

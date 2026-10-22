@@ -7,6 +7,7 @@ import type { AuthFormState } from "@/features/auth/auth-form-state";
 import { initialAuthFormState } from "@/features/auth/auth-form-state";
 import { useActionToast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
+import { Alert } from "@/components/ui/alert";
 import { FormField, Input } from "@/components/ui/input";
 
 function LoginFormFields({ state }: { state: AuthFormState }) {
@@ -41,11 +42,17 @@ function LoginFormFields({ state }: { state: AuthFormState }) {
   );
 }
 
-export function LoginForm() {
+export function LoginForm({ accessMessage }: { accessMessage?: string | null }) {
   const [state, formAction] = useActionState(loginAction, initialAuthFormState);
 
   return (
     <>
+      {accessMessage ? (
+        <Alert variant="danger" title="Access unavailable" className="mb-4">
+          {accessMessage}
+        </Alert>
+      ) : null}
+
       <form action={formAction} className="space-y-4">
         <LoginFormFields state={state} />
       </form>

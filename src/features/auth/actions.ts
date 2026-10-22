@@ -3,6 +3,10 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { AuthFormState } from "@/features/auth/auth-form-state";
+import {
+  ACCESS_UNAVAILABLE_MESSAGE,
+  INACTIVE_ACCESS_MESSAGE
+} from "@/features/auth/login-access-message";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 const loginSchema = z.object({
@@ -38,6 +42,37 @@ export async function loginAction(
       status: "error",
       message: GENERIC_LOGIN_ERROR
     };
+  }
+
+  let hasActiveProfile = false;
+  let profileCheckFailed = false;
+
+  try {
+    const { data, error: profileError } = await supabase.rpc("is_active_user");
+    hasActiveProfile = !profileError && data === true;
+    profileCheckFailed = Boolean(profileError);
+  } catch {
+    profileCheckFailed = true;
+  }
+
+  if (!hasActiveProfile) {
+    let signOutFailed = false;
+    try {
+      const { error: signOutError } = await supabase.auth.signOut({ scope: "local" });
+      signOutFailed = Boolean(signOutError);
+    } catch {
+      signOutFailed = true;
+    }
+    const message = profileCheckFailed ? ACCESS_UNAVAILABLE_MESSAGE : INACTIVE_ACCESS_MESSAGE;
+
+    if (signOutFailed) {
+      return {
+        status: "error",
+        message: `${message} Sign-out could not be confirmed; close this browser before trying again.`
+      };
+    }
+
+    return { status: "error", message };
   }
 
   redirect("/");
